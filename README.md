@@ -1,24 +1,39 @@
-# Lumen PHP Framework
+# Plutus BE
 
-[![Build Status](https://travis-ci.org/laravel/lumen-framework.svg)](https://travis-ci.org/laravel/lumen-framework)
-[![Total Downloads](https://img.shields.io/packagist/dt/laravel/framework)](https://packagist.org/packages/laravel/lumen-framework)
-[![Latest Stable Version](https://img.shields.io/packagist/v/laravel/framework)](https://packagist.org/packages/laravel/lumen-framework)
-[![License](https://img.shields.io/packagist/l/laravel/framework)](https://packagist.org/packages/laravel/lumen-framework)
+## Description
 
-Laravel Lumen is a stunningly fast PHP micro-framework for building web applications with expressive, elegant syntax. We believe development must be an enjoyable, creative experience to be truly fulfilling. Lumen attempts to take the pain out of development by easing common tasks used in the majority of web projects, such as routing, database abstraction, queueing, and caching.
+Backend service of Plutus, a monetary management system from Nyxordinal
 
-## Official Documentation
+## Development Tools
 
-Documentation for the framework can be found on the [Lumen website](https://lumen.laravel.com/docs).
+-   [Lumen v8.0.1](https://lumen.laravel.com/)
+-   [JSON Web Token Authentication for Laravel & Lumen](https://github.com/tymondesigns/jwt-auth)
+-   [Faker](https://github.com/fzaninotto/Faker)
+-   [Lumen Generator](https://github.com/flipboxstudio/lumen-generator)
+-   [Laravel CORS](https://github.com/fruitcake/laravel-cors)
 
-## Contributing
+## Set Up
 
-Thank you for considering contributing to Lumen! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+1. Clone this repo and change directory to project folder  
+   `git clone https://github.com/nyxordinal/plutus-be.git && cd /plutus-be`
+2. Install dependencies  
+   `composer install`
+3. Copy .env.example to .env  
+   `cp .env.example .env`
+4. Generate aplication key  
+   `php artisan key:generate`
+5. Generate JWT secret key  
+   `php artisan jwt:secret`
+6. Set your database credential in .env on key DB\_\*
+8. If you are in production, do not forget to set APP_ENV in .env to "production" and set APP_DEBUG to "false"
 
-## Security Vulnerabilities
+## Run Dev Server
 
-If you discover a security vulnerability within Lumen, please send an e-mail to Taylor Otwell at taylor@laravel.com. All security vulnerabilities will be promptly addressed.
+1. Open terminal in your project folder
+2. Use below command in the terminal
+   `php artisan serve`
+3. Access development server in http://localhost:8000
 
-## License
+## Developer Team
 
-The Lumen framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Developed with passion by [Nyxordinal](https://github.com/nyxordinal)
