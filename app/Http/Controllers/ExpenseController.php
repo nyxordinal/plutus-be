@@ -14,12 +14,17 @@ class ExpenseController extends Controller
         $this->middleware('auth:user');
     }
 
-    public function getExpense()
+    public function getExpense(Request $request)
     {
         try {
-            $user = auth('user')->user();
-            $expenses = $user->expenses;
-            return $this->successResponse($expenses);
+            $start_date = $request->query('start', '0001-01-01 00:00:00');
+            $end_date = $request->query('end', '9999-12-31 23:59:59');
+            $user = User::find(auth('user')->user()->id);
+            $expenses = $user->expenses()->where([
+                ['date', '>=', $start_date],
+                ['date', '<=', $end_date],
+            ])->get();
+            return $this->successResponse(["total" => $expenses->sum('price'), "expenses" => $expenses]);
         } catch (\Exception $exception) {
             return $this->internalServerErrorResponse($exception);
         }

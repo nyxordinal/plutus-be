@@ -14,6 +14,15 @@ class Expense extends Model
     protected $fillable = ['name', 'type_id', 'price', 'date'];
 
     /**
+     * The attributes excluded from the model's JSON form.
+     *
+     * @var array
+     */
+    protected $hidden = [
+        'user_id', "created_at", "updated_at"
+    ];
+
+    /**
      * Get the user that owns the expense.
      */
     public function user()
