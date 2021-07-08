@@ -2,6 +2,8 @@
 
 /** @var \Laravel\Lumen\Routing\Router $router */
 
+use Illuminate\Http\Response;
+
 /*
 |--------------------------------------------------------------------------
 | Application Routes
@@ -13,6 +15,18 @@
 |
 */
 
-$router->get('/', function () use ($router) {
-    return $router->app->version();
-});
+$router->group(
+    ['prefix' => '/public/v1/'],
+    function ($router) {
+        $router->get('/', function () use ($router) {
+            return response()->json(['code' => Response::HTTP_OK, 'message' => 'Welcome to Nyxordinal Plutus API']);
+        });
+
+        $router->group(['prefix' => 'auth'], function ($router) {
+            $router->get('me', 'AuthController@me');
+            $router->get('refresh', 'AuthController@refresh');
+            $router->post('login', 'AuthController@login');
+            $router->post('register', 'AuthController@register');
+        });
+    }
+);
