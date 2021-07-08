@@ -14,6 +14,15 @@ class Income extends Model
     protected $fillable = ['source', 'amount', 'date'];
 
     /**
+     * The attributes excluded from the model's JSON form.
+     *
+     * @var array
+     */
+    protected $hidden = [
+        'user_id', "created_at", "updated_at"
+    ];
+
+    /**
      * Get the user that owns the income.
      */
     public function user()
