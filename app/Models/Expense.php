@@ -7,6 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 class Expense extends Model
 {
     /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $fillable = ['name', 'type_id', 'price', 'date'];
+
+    /**
      * Get the user that owns the expense.
      */
     public function user()
