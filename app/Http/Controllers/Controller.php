@@ -33,6 +33,9 @@ class Controller extends BaseController
 
     public function badRequestResponse($errors, $message = 'Bad Request')
     {
+        if (is_array($errors) && (count($errors) > 0)) {
+            return $this->baseResponse(Response::HTTP_BAD_REQUEST, $message, true, null, reset($errors)[0]);
+        }
         return $this->baseResponse(Response::HTTP_BAD_REQUEST, $message, true, null, $errors);
     }
 
