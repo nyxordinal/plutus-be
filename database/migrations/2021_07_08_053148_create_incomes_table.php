@@ -15,10 +15,13 @@ class CreateIncomesTable extends Migration
     {
         Schema::create('incomes', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('user_id');
             $table->string('source',100);
             $table->unsignedInteger('amount');
             $table->dateTime('date');
             $table->timestamps();
+
+            $table->foreign('user_id')->references('id')->on('users');
         });
     }
 

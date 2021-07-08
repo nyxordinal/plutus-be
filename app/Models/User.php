@@ -41,6 +41,14 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
     }
 
     /**
+     * Get the user's incomes.
+     */
+    public function incomes()
+    {
+        return $this->hasMany(Income::class);
+    }
+
+    /**
      * Get the identifier that will be stored in the subject claim of the JWT.
      *
      * @return mixed
