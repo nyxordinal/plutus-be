@@ -29,7 +29,7 @@ class ExpenseController extends Controller
     {
         try {
             $this->validate($request, [
-                'name' => 'required|max:100',
+                'name' => 'required|string|max:100',
                 'type_id' => 'required|exists:expense_types,id',
                 'price' => 'required|numeric|gt:0',
                 'date' => 'required|date',
@@ -59,7 +59,7 @@ class ExpenseController extends Controller
         try {
             $this->validate($request, [
                 'id' => 'required|exists:expenses,id',
-                'name' => 'max:100',
+                'name' => 'string|max:100',
                 'type_id' => 'exists:expense_types,id',
                 'price' => 'numeric|gt:0',
                 'date' => 'date',
