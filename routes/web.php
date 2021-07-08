@@ -35,5 +35,12 @@ $router->group(
             $router->put('/', 'ExpenseController@updateExpense');
             $router->delete('/', 'ExpenseController@deleteExpense');
         });
+
+        $router->group(['prefix' => 'income'], function ($router) {
+            $router->get('/', 'IncomeController@getIncome');
+            $router->post('/', 'IncomeController@createIncome');
+            $router->put('/', 'IncomeController@updateIncome');
+            $router->delete('/', 'IncomeController@deleteIncome');
+        });
     }
 );
