@@ -28,5 +28,12 @@ $router->group(
             $router->post('login', 'AuthController@login');
             $router->post('register', 'AuthController@register');
         });
+
+        $router->group(['prefix' => 'expense'], function ($router) {
+            $router->get('/', 'ExpenseController@getExpense');
+            $router->post('/', 'ExpenseController@createExpense');
+            $router->put('/', 'ExpenseController@updateExpense');
+            $router->delete('/', 'ExpenseController@deleteExpense');
+        });
     }
 );
