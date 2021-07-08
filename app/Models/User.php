@@ -30,4 +30,12 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
     protected $hidden = [
         'password',
     ];
+
+    /**
+     * Get the user's expenses.
+     */
+    public function expenses()
+    {
+        return $this->hasMany(Expense::class);
+    }
 }
