@@ -19,7 +19,7 @@ class CreateExpensesTable extends Migration
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('type_id');
             $table->unsignedInteger('price');
-            $table->dateTime('date');
+            $table->date('date');
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users');

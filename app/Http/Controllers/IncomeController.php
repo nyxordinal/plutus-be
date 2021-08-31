@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Income;
 use App\Models\User;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class IncomeController extends Controller
@@ -12,6 +14,24 @@ class IncomeController extends Controller
     public function __construct()
     {
         $this->middleware('auth:user');
+    }
+
+    public function getIncomeSummary()
+    {
+        try {
+            $user = User::find(auth('user')->user()->id);
+            $incomeSummary = $user->incomes()
+                ->select(
+                    DB::raw('DATE_FORMAT(date,\'%Y-%m\') as yearmonth'),
+                    DB::raw('SUM(amount) as amount')
+                )
+                ->groupBy('yearmonth')
+                ->orderBy('yearmonth', 'desc')
+                ->get();
+            return $this->successResponse($incomeSummary);
+        } catch (\Exception $exception) {
+            return $this->internalServerErrorResponse($exception);
+        }
     }
 
     public function getIncome()
@@ -78,20 +98,20 @@ class IncomeController extends Controller
         }
     }
 
-    public function deleteIncome(Request $request)
+    public function deleteIncome($id)
     {
         try {
-            $this->validate($request, [
-                'id' => 'required|exists:incomes,id',
-            ]);
+            $income = Income::findOrFail($id);
 
             // delete income
-            Income::destroy($request->id);
+            $income->delete();
 
             return $this->successResponse(null, 'Income deleted');
         } catch (\Exception $exception) {
             if ($exception instanceof ValidationException) {
                 return $this->badRequestResponse($exception->errors());
+            } else if ($exception instanceof ModelNotFoundException) {
+                return $this->badRequestResponse('income not found');
             } else {
                 return $this->internalServerErrorResponse($exception);
             }
