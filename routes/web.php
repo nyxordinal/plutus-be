@@ -30,17 +30,19 @@ $router->group(
         });
 
         $router->group(['prefix' => 'expense'], function ($router) {
+            $router->get('/summary', 'ExpenseController@getExpenseSummary');
             $router->get('/', 'ExpenseController@getExpense');
             $router->post('/', 'ExpenseController@createExpense');
             $router->put('/', 'ExpenseController@updateExpense');
-            $router->delete('/', 'ExpenseController@deleteExpense');
+            $router->delete('/{id}', 'ExpenseController@deleteExpense');
         });
 
         $router->group(['prefix' => 'income'], function ($router) {
+            $router->get('/summary', 'IncomeController@getIncomeSummary');
             $router->get('/', 'IncomeController@getIncome');
             $router->post('/', 'IncomeController@createIncome');
             $router->put('/', 'IncomeController@updateIncome');
-            $router->delete('/', 'IncomeController@deleteIncome');
+            $router->delete('/{id}', 'IncomeController@deleteIncome');
         });
     }
 );
