@@ -27,8 +27,7 @@ class AuthController extends Controller
             if ($token) {
                 $user = User::where('email', $request->email)->first();
                 $json_user = $user->toArray();
-                $json_user['jwt_token'] = $token;
-                return $this->successResponse($json_user);
+                return $this->successLoginResponse($json_user, $token);
             } else {
                 return $this->unauthorizedResponse('Your email or password is wrong');
             }

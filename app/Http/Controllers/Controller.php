@@ -21,6 +21,16 @@ class Controller extends BaseController
         return $this->baseResponse(Response::HTTP_OK, $message, false, $data);
     }
 
+    public function successLoginResponse($data = null,  $authToken = '', $message = 'Success')
+    {
+        return response()
+            ->json(
+                ['code' => Response::HTTP_OK, 'message' => $message, 'data' => $data],
+                Response::HTTP_OK,
+                ['x-token' => $authToken]
+            );
+    }
+
     public function createdResponse($data = null, $message = 'Success created')
     {
         return $this->baseResponse(Response::HTTP_CREATED, $message, false, $data);
