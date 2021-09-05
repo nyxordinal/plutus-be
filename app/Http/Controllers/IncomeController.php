@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Income;
 use App\Models\User;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -34,11 +33,14 @@ class IncomeController extends Controller
         }
     }
 
-    public function getIncome()
+    public function getIncome(Request $request)
     {
         try {
-            $user = auth('user')->user();
-            return $this->successResponse($user->incomes);
+            $dataPerPage = $request->query('count', '5');
+            $user = User::find(auth('user')->user()->id);
+            $incomes = $user->incomes()->orderBy('date', 'desc')
+                ->paginate($dataPerPage);
+            return $this->successResponse($incomes);
         } catch (\Exception $exception) {
             return $this->internalServerErrorResponse($exception);
         }
@@ -98,22 +100,22 @@ class IncomeController extends Controller
         }
     }
 
-    public function deleteIncome($id)
+    public function bulkDeleteIncome(Request $request)
     {
         try {
-            $income = Income::findOrFail($id);
+            $this->validate($request, [
+                'ids' => 'required|array|min:1',
+            ]);
 
-            // delete income
-            $income->delete();
+            // bulk delete income
+            Income::destroy($request->ids);
 
-            return $this->successResponse(null, 'Income deleted');
-        } catch (\Exception $exception) {
-            if ($exception instanceof ValidationException) {
-                return $this->badRequestResponse($exception->errors());
-            } else if ($exception instanceof ModelNotFoundException) {
-                return $this->badRequestResponse('income not found');
+            return $this->successResponse(null, 'Incomes deleted');
+        } catch (\Exception $e) {
+            if ($e instanceof ValidationException) {
+                return $this->badRequestResponse($e->errors());
             } else {
-                return $this->internalServerErrorResponse($exception);
+                return $this->internalServerErrorResponse($e);
             }
         }
     }

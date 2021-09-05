@@ -22,6 +22,8 @@ $router->group(
             return response()->json(['code' => Response::HTTP_OK, 'message' => 'Welcome to Nyxordinal Plutus API']);
         });
 
+        $router->post('upload', 'ExpenseController@uploadExpense');
+
         $router->group(['prefix' => 'auth'], function ($router) {
             $router->get('me', 'AuthController@me');
             $router->get('refresh', 'AuthController@refresh');
@@ -30,19 +32,19 @@ $router->group(
         });
 
         $router->group(['prefix' => 'expense'], function ($router) {
+            $router->post('/delete/bulk', 'ExpenseController@bulkDeleteExpense');
             $router->get('/summary', 'ExpenseController@getExpenseSummary');
             $router->get('/', 'ExpenseController@getExpense');
             $router->post('/', 'ExpenseController@createExpense');
             $router->put('/', 'ExpenseController@updateExpense');
-            $router->delete('/{id}', 'ExpenseController@deleteExpense');
         });
 
         $router->group(['prefix' => 'income'], function ($router) {
+            $router->post('/delete/bulk', 'IncomeController@bulkDeleteIncome');
             $router->get('/summary', 'IncomeController@getIncomeSummary');
             $router->get('/', 'IncomeController@getIncome');
             $router->post('/', 'IncomeController@createIncome');
             $router->put('/', 'IncomeController@updateIncome');
-            $router->delete('/{id}', 'IncomeController@deleteIncome');
         });
     }
 );
