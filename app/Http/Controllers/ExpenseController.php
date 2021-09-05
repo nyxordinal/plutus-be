@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Expense;
 use App\Models\User;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -37,13 +36,18 @@ class ExpenseController extends Controller
     public function getExpense(Request $request)
     {
         try {
-            $start_date = $request->query('start', '0001-01-01 00:00:00');
-            $end_date = $request->query('end', '9999-12-31 23:59:59');
+            $startDate = $request->query('start', '0001-01-01 00:00:00');
+            $endDate = $request->query('end', '9999-12-31 23:59:59');
+            $name = $request->query('name', '');
+            $dataPerPage = $request->query('count', '5');
             $user = User::find(auth('user')->user()->id);
             $expenses = $user->expenses()->where([
-                ['date', '>=', $start_date],
-                ['date', '<=', $end_date],
-            ])->get();
+                ['name', 'like', '%' . $name . '%'],
+                ['date', '>=', $startDate],
+                ['date', '<=', $endDate],
+            ])
+                ->orderBy('date', 'desc')
+                ->paginate($dataPerPage);
             return $this->successResponse($expenses);
         } catch (\Exception $exception) {
             return $this->internalServerErrorResponse($exception);
@@ -108,20 +112,20 @@ class ExpenseController extends Controller
         }
     }
 
-    public function deleteExpense($id)
+    public function bulkDeleteExpense(Request $request)
     {
         try {
-            $expense = Expense::findOrFail($id);
+            $this->validate($request, [
+                'ids' => 'required|array|min:1',
+            ]);
 
-            // delete expense
-            $expense->delete();
+            // bulk delete expense
+            Expense::destroy($request->ids);
 
-            return $this->successResponse(null, 'Expense deleted');
+            return $this->successResponse(null, 'Expenses deleted');
         } catch (\Exception $e) {
             if ($e instanceof ValidationException) {
                 return $this->badRequestResponse($e->errors());
-            } else if ($e instanceof ModelNotFoundException) {
-                return $this->badRequestResponse('expense not found');
             } else {
                 return $this->internalServerErrorResponse($e);
             }
