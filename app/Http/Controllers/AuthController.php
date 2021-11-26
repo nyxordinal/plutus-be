@@ -3,10 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
-use Tymon\JWTAuth\Exceptions\JWTException;
 
 class AuthController extends Controller
 {
@@ -29,16 +28,10 @@ class AuthController extends Controller
                 $json_user = $user->toArray();
                 return $this->successLoginResponse($json_user, $token);
             } else {
-                return $this->unauthorizedResponse('Your email or password is wrong');
+                throw new AuthorizationException('Your email or password is wrong');
             }
         } catch (\Exception $exception) {
-            if ($exception instanceof ValidationException) {
-                return $this->badRequestResponse($exception->errors());
-            } elseif ($exception instanceof JWTException) {
-                return $this->unauthorizedResponse('Token error');
-            } else {
-                return $this->internalServerErrorResponse($exception);
-            }
+            return $this->errorResponse($exception);
         }
     }
 
@@ -47,15 +40,9 @@ class AuthController extends Controller
         try {
             $this->validate($request, [
                 'name' => 'required|max:100',
-                'email' => 'required|email',
+                'email' => 'required|email|unique:users,email',
                 'password' => 'required|min:8',
             ]);
-
-            // Check email already taken or not
-            $email_taken = User::firstWhere('email', $request->email);
-            if ($email_taken) {
-                return $this->conflictResponse('Email already registered');
-            }
 
             // Create new user data
             $user = new User;
@@ -64,14 +51,9 @@ class AuthController extends Controller
             $user->password = Hash::make($request->password);
             $user->save();
 
-
             return $this->createdResponse(null, 'Registration is successful, you can login using your new account');
         } catch (\Exception $exception) {
-            if ($exception instanceof ValidationException) {
-                return $this->badRequestResponse($exception->errors());
-            } else {
-                return $this->internalServerErrorResponse($exception);
-            }
+            return $this->errorResponse($exception);
         }
     }
 
@@ -80,7 +62,7 @@ class AuthController extends Controller
         try {
             return $this->successResponse(auth('user')->user());
         } catch (\Exception $exception) {
-            return $this->internalServerErrorResponse($exception);
+            return $this->errorResponse($exception);
         }
     }
 
@@ -89,7 +71,7 @@ class AuthController extends Controller
         try {
             return $this->successResponse(["token" => auth('user')->refresh()]);
         } catch (\Exception $exception) {
-            return $this->internalServerErrorResponse($exception);
+            return $this->errorResponse($exception);
         }
     }
 }

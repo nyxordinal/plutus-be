@@ -6,7 +6,6 @@ use App\Models\Income;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 
 class IncomeController extends Controller
 {
@@ -29,7 +28,7 @@ class IncomeController extends Controller
                 ->get();
             return $this->successResponse($incomeSummary);
         } catch (\Exception $exception) {
-            return $this->internalServerErrorResponse($exception);
+            return $this->errorResponse($exception);
         }
     }
 
@@ -42,7 +41,7 @@ class IncomeController extends Controller
                 ->paginate($dataPerPage);
             return $this->successResponse($incomes);
         } catch (\Exception $exception) {
-            return $this->internalServerErrorResponse($exception);
+            return $this->errorResponse($exception);
         }
     }
 
@@ -65,11 +64,7 @@ class IncomeController extends Controller
 
             return $this->createdResponse($income, 'Income created');
         } catch (\Exception $exception) {
-            if ($exception instanceof ValidationException) {
-                return $this->badRequestResponse($exception->errors());
-            } else {
-                return $this->internalServerErrorResponse($exception);
-            }
+            return $this->errorResponse($exception);
         }
     }
 
@@ -92,11 +87,7 @@ class IncomeController extends Controller
 
             return $this->successResponse($expense, 'Income updated');
         } catch (\Exception $exception) {
-            if ($exception instanceof ValidationException) {
-                return $this->badRequestResponse($exception->errors());
-            } else {
-                return $this->internalServerErrorResponse($exception);
-            }
+            return $this->errorResponse($exception);
         }
     }
 
@@ -111,12 +102,8 @@ class IncomeController extends Controller
             Income::destroy($request->ids);
 
             return $this->successResponse(null, 'Incomes deleted');
-        } catch (\Exception $e) {
-            if ($e instanceof ValidationException) {
-                return $this->badRequestResponse($e->errors());
-            } else {
-                return $this->internalServerErrorResponse($e);
-            }
+        } catch (\Exception $exception) {
+            return $this->errorResponse($exception);
         }
     }
 }
