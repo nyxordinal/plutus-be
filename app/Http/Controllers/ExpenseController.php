@@ -60,14 +60,14 @@ class ExpenseController extends Controller
         try {
             $this->validate($request, [
                 'name' => 'required|string|max:100',
-                'type_id' => 'required|numeric',
+                'type' => 'required|numeric',
                 'price' => 'required|numeric|gt:0',
                 'date' => 'required|date',
             ]);
 
 
             // validate expense type
-            $type =  ExpenseType::coerce($request->type_id);
+            $type =  ExpenseType::coerce($request->type);
             if (!$type) {
                 throw new ExpenseTypeException('expense type invalid');
             }
@@ -76,7 +76,7 @@ class ExpenseController extends Controller
             $user = User::find(auth('user')->user()->id);
             $expense = $user->expenses()->create([
                 'name' => $request->name,
-                'type_id' => $type->value,
+                'type' => $type->value,
                 'price' => $request->price,
                 'date' => $request->date,
             ]);
@@ -93,15 +93,23 @@ class ExpenseController extends Controller
             $this->validate($request, [
                 'id' => 'required|exists:expenses,id',
                 'name' => 'string|max:100',
-                'type_id' => 'exists:expense_types,id',
+                'type' => 'numeric',
                 'price' => 'numeric|gt:0',
                 'date' => 'date',
             ]);
 
+            // validate expense type
+            if ($request->type) {
+                $type = ExpenseType::coerce($request->type);
+                if (!$type) {
+                    throw new ExpenseTypeException('expense type invalid');
+                }
+            }
+
             // update expense
             $expense = Expense::find($request->id);
             $expense->name = $request->name ? $request->name : $expense->name;
-            $expense->type_id = $request->type_id ? $request->type_id : $expense->type_id;
+            $expense->type = $request->type ? $request->type : $expense->type;
             $expense->price = $request->price ? $request->price : $expense->price;
             $expense->date = $request->date ? $request->date : $expense->date;
             $expense->save();

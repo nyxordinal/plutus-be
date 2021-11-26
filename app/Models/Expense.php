@@ -11,7 +11,7 @@ class Expense extends Model
      *
      * @var array
      */
-    protected $fillable = ['name', 'type_id', 'price', 'date'];
+    protected $fillable = ['name', 'type', 'price', 'date'];
 
     /**
      * The attributes excluded from the model's JSON form.
@@ -28,13 +28,5 @@ class Expense extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
-    }
-
-    /**
-     * Get the expense's type
-     */
-    public function type()
-    {
-        return $this->belongsTo(ExpenseType::class);
     }
 }
