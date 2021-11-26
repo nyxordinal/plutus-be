@@ -3,17 +3,21 @@
 namespace App\Http\Controllers;
 
 use Exception;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Response;
+use Illuminate\Validation\ValidationException;
 use Laravel\Lumen\Routing\Controller as BaseController;
+use Tymon\JWTAuth\Exceptions\JWTException;
 
 class Controller extends BaseController
 {
-    function baseResponse($code, $message, $isErrorResponse, $data = null,  $error = null)
+    function baseResponse($httpCode, $message, $isErrorResponse, $data = null)
     {
-        if ($isErrorResponse) {
-            return response()->json(['code' => $code, 'message' => $message, 'error' => $error], $code);
+        $arr = array('message' => $message);
+        if (!$isErrorResponse && $data != null) {
+            $arr['data'] = $data;
         }
-        return response()->json(['code' => $code, 'message' => $message, 'data' => $data], $code);
+        return response()->json($arr, $httpCode);
     }
 
     public function successResponse($data = null, $message = 'Success')
@@ -25,7 +29,7 @@ class Controller extends BaseController
     {
         return response()
             ->json(
-                ['code' => Response::HTTP_OK, 'message' => $message, 'data' => $data],
+                ['message' => $message, 'data' => $data],
                 Response::HTTP_OK,
                 ['x-token' => $authToken]
             );
@@ -36,41 +40,25 @@ class Controller extends BaseController
         return $this->baseResponse(Response::HTTP_CREATED, $message, false, $data);
     }
 
-    public function internalServerErrorResponse(Exception $exception, $message = 'Unexpected Error')
+    public function errorResponse(Exception $exception)
     {
-        return $this->baseResponse(Response::HTTP_INTERNAL_SERVER_ERROR, $message, true, null, $exception->getMessage());
-    }
+        $httpCode = Response::HTTP_INTERNAL_SERVER_ERROR;
+        $errMessage = $exception->getMessage();
 
-    public function badRequestResponse($errors, $message = 'Bad Request')
-    {
-        if (is_array($errors) && (count($errors) > 0)) {
-            return $this->baseResponse(Response::HTTP_BAD_REQUEST, $message, true, null, reset($errors)[0]);
-        }
-        return $this->baseResponse(Response::HTTP_BAD_REQUEST, $message, true, null, $errors);
-    }
+        if ($exception instanceof ValidationException) {
+            $error = $exception->errors();
+            if (is_array($error) && (count($error) > 0)) {
+                $errMessage = reset($error)[0];
+            } else {
+                $errMessage = $error;
+            }
+            $httpCode = Response::HTTP_BAD_REQUEST;
+        } elseif (
+            $exception instanceof JWTException ||
+            $exception instanceof AuthorizationException
+        )
+            $httpCode = Response::HTTP_UNAUTHORIZED;
 
-    public function unauthorizedResponse($message = 'Unauthorized')
-    {
-        return $this->baseResponse(Response::HTTP_UNAUTHORIZED, $message, true);
-    }
-
-    public function forbiddenResponse($message = 'Forbidden')
-    {
-        return $this->baseResponse(Response::HTTP_FORBIDDEN, $message, true);
-    }
-
-    public function notFoundResponse($message = 'Resource not found')
-    {
-        return $this->baseResponse(Response::HTTP_NOT_FOUND, $message, true);
-    }
-
-    public function conflictResponse($message = 'Conflict')
-    {
-        return $this->baseResponse(response::HTTP_CONFLICT, $message, true);
-    }
-
-    public function unprocessableEntityResponse($message = 'Unprocessable entity')
-    {
-        return $this->baseResponse(Response::HTTP_UNPROCESSABLE_ENTITY, $message, true);
+        return $this->baseResponse($httpCode, $errMessage, true);
     }
 }

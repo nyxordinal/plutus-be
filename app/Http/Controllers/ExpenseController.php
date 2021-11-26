@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ExpenseType;
+use App\Exceptions\ExpenseTypeException;
 use App\Models\Expense;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 
 class ExpenseController extends Controller
 {
@@ -29,7 +30,7 @@ class ExpenseController extends Controller
                 ->get();
             return $this->successResponse($expenseSummary);
         } catch (\Exception $exception) {
-            return $this->internalServerErrorResponse($exception);
+            return $this->errorResponse($exception);
         }
     }
 
@@ -50,7 +51,7 @@ class ExpenseController extends Controller
                 ->paginate($dataPerPage);
             return $this->successResponse($expenses);
         } catch (\Exception $exception) {
-            return $this->internalServerErrorResponse($exception);
+            return $this->errorResponse($exception);
         }
     }
 
@@ -59,27 +60,30 @@ class ExpenseController extends Controller
         try {
             $this->validate($request, [
                 'name' => 'required|string|max:100',
-                'type_id' => 'required|exists:expense_types,id',
+                'type_id' => 'required|numeric',
                 'price' => 'required|numeric|gt:0',
                 'date' => 'required|date',
             ]);
+
+
+            // validate expense type
+            $type =  ExpenseType::coerce($request->type_id);
+            if (!$type) {
+                throw new ExpenseTypeException('expense type invalid');
+            }
 
             // Create new expense
             $user = User::find(auth('user')->user()->id);
             $expense = $user->expenses()->create([
                 'name' => $request->name,
-                'type_id' => $request->type_id,
+                'type_id' => $type->value,
                 'price' => $request->price,
                 'date' => $request->date,
             ]);
 
             return $this->createdResponse($expense, 'Expense created');
         } catch (\Exception $exception) {
-            if ($exception instanceof ValidationException) {
-                return $this->badRequestResponse($exception->errors());
-            } else {
-                return $this->internalServerErrorResponse($exception);
-            }
+            return $this->errorResponse($exception);
         }
     }
 
@@ -104,11 +108,7 @@ class ExpenseController extends Controller
 
             return $this->successResponse($expense, 'Expense updated');
         } catch (\Exception $exception) {
-            if ($exception instanceof ValidationException) {
-                return $this->badRequestResponse($exception->errors());
-            } else {
-                return $this->internalServerErrorResponse($exception);
-            }
+            return $this->errorResponse($exception);
         }
     }
 
@@ -123,12 +123,8 @@ class ExpenseController extends Controller
             Expense::destroy($request->ids);
 
             return $this->successResponse(null, 'Expenses deleted');
-        } catch (\Exception $e) {
-            if ($e instanceof ValidationException) {
-                return $this->badRequestResponse($e->errors());
-            } else {
-                return $this->internalServerErrorResponse($e);
-            }
+        } catch (\Exception $exception) {
+            return $this->errorResponse($exception);
         }
     }
 }
