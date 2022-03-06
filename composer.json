@@ -1,7 +1,11 @@
 {
     "name": "laravel/lumen",
     "description": "The Laravel Lumen Framework.",
-    "keywords": ["framework", "laravel", "lumen"],
+    "keywords": [
+        "framework",
+        "laravel",
+        "lumen"
+    ],
     "license": "MIT",
     "type": "project",
     "require": {
@@ -11,6 +15,8 @@
         "flipbox/lumen-generator": "^8.2",
         "fruitcake/laravel-cors": "^2.0",
         "laravel/lumen-framework": "^8.0",
+        "nesbot/carbon": "^2.57",
+        "phpseclib/phpseclib": "~2.0",
         "tymon/jwt-auth": "^1.0"
     },
     "require-dev": {
