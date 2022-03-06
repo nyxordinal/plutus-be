@@ -24,8 +24,11 @@ Backend service of Plutus, a monetary management system from Nyxordinal
    `php artisan key:generate`
 5. Generate JWT secret key  
    `php artisan jwt:secret`
-6. Set your database credential in .env on key DB\_\*
-7. If you are in production, do not forget to set APP_ENV in .env to "production" and set APP_DEBUG to "false"
+6. Set your database credential in .env on key `DB\_\*`
+7. Generate a pair of public and private RSA key with `pkcs1` padding
+8. Place your private RSA key in .env on key `RSA_PRIVATE_KEY`. If you want to make it as a one-line, make sure to use single quote
+9. Save your previously generated public RSA key and use it in [plutus-fe](https://github.com/nyxordinal/plutus-fe)
+10. If you are in production, do not forget to set APP_ENV in .env to "production" and set APP_DEBUG to "false"
 
 ## Run Dev Server
 
@@ -70,6 +73,7 @@ docker run -d -p {host-port}:8001 --name plutus-be \
     --env DB_USERNAME={your-db-username} \
     --env DB_PASSWORD={your-db-password} \
     --env JWT_SECRET={your-jwt-secret} \
+    --env RSA_PRIVATE_KEY={your-private-rsa-key} \
     nyxordinal/plutus-be:{tag}
 ```
 

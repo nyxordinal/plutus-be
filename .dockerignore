@@ -2,3 +2,5 @@ Dockerfile
 .dockerignore
 .env
 vendor
+public/private-key
+public/public-key

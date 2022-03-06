@@ -22,6 +22,7 @@ $router->group(
             return response()->json(['code' => Response::HTTP_OK, 'message' => 'Welcome to Nyxordinal Plutus API']);
         });
 
+        $router->get('login-state', 'AuthController@getServerTimestamp');
         $router->post('upload', 'ExpenseController@uploadExpense');
 
         $router->group(['prefix' => 'auth'], function ($router) {
