@@ -30,6 +30,8 @@ $router->group(
             $router->get('refresh', 'AuthController@refresh');
             $router->post('login', 'AuthController@login');
             $router->post('register', 'AuthController@register');
+            $router->post('forgot', 'AuthController@sendResetPasswordEmail');
+            $router->post('reset', 'AuthController@resetPassword');
         });
 
         $router->group(['prefix' => 'expense'], function ($router) {
