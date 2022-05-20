@@ -74,6 +74,14 @@ docker run -d -p {host-port}:8001 --name plutus-be \
     --env DB_PASSWORD={your-db-password} \
     --env JWT_SECRET={your-jwt-secret} \
     --env RSA_PRIVATE_KEY={your-private-rsa-key} \
+    --env MAIL_MAILER=smtp \
+    --env MAIL_HOST=smtp.mailtrap.io \
+    --env MAIL_PORT=2525 \
+    --env MAIL_USERNAME={your-mail-username} \
+    --env MAIL_PASSWORD={your-mail-password} \
+    --env MAIL_ENCRYPTION=tls \
+    --env MAIL_FROM_ADDRESS=hello@example.com \
+    --env MAIL_FROM_NAME="Plutus Nyxordinal" \
     nyxordinal/plutus-be:{tag}
 ```
 
