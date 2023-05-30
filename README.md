@@ -49,7 +49,7 @@ A. Publish Development Changes
 
 1. Do your changes
 2. Build plutus-be docker image  
-   `docker build -t nyxordinal/plutus-be:{tag} .`
+   `docker build --platform linux/amd64 -t nyxordinal/plutus-be:{tag} .`
 3. Push docker image to nyxordinal registry  
    `docker push nyxordinal/plutus-be:{tag}`
 
