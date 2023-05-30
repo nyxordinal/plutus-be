@@ -4,10 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Enums\ExpenseType;
 use App\Exceptions\ExpenseTypeException;
+use App\Mail\ExpenseLimitAlert;
 use App\Models\Expense;
 use App\Models\User;
+use DateTime;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class ExpenseController extends Controller
 {
@@ -80,6 +83,19 @@ class ExpenseController extends Controller
                 'price' => $request->price,
                 'date' => $request->date,
             ]);
+
+            // check expense limit
+            $firstDateOfCurrentMonth = DateTime::createFromFormat('m-d-Y', date('m-01-Y'));
+            $lastDateOfCurrentMonth = DateTime::createFromFormat('m-d-Y', date('m-t-Y'));
+            $totalExpense = Expense::where('user_id', $user->id)
+                ->whereBetween(
+                    'date',
+                    [$firstDateOfCurrentMonth, $lastDateOfCurrentMonth]
+                )->sum('price');
+            if ($totalExpense >= $user->expense_limit) {
+                // send email
+                Mail::to($user)->send(new ExpenseLimitAlert($user));
+            }
 
             return $this->createdResponse($expense, 'Expense created');
         } catch (\Exception $exception) {

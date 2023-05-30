@@ -8,7 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
-class PasswordReset extends Mailable
+class ExpenseLimitAlert extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -37,7 +37,7 @@ class PasswordReset extends Mailable
     public function build()
     {
         return $this->from('no-reply@nyxordinal.tech', 'Nyxordinal')
-            ->subject('Plutus Nyxordinal | Password Reset')
-            ->view('password-reset-mail');
+            ->subject('Important: Your expense exceeds your expense limit!')
+            ->view('expense-limit-alert');
     }
 }
