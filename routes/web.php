@@ -49,5 +49,10 @@ $router->group(
             $router->post('/', 'IncomeController@createIncome');
             $router->put('/', 'IncomeController@updateIncome');
         });
+
+        $router->group(['prefix' => 'setting'], function ($router) {
+            $router->get('/', 'SettingController@getSettings');
+            $router->put('/', 'SettingController@updateSettings');
+        });
     }
 );
