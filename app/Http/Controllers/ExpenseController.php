@@ -85,16 +85,18 @@ class ExpenseController extends Controller
             ]);
 
             // check expense limit
-            $firstDateOfCurrentMonth = DateTime::createFromFormat('m-d-Y', date('m-01-Y'));
-            $lastDateOfCurrentMonth = DateTime::createFromFormat('m-d-Y', date('m-t-Y'));
-            $totalExpense = Expense::where('user_id', $user->id)
-                ->whereBetween(
-                    'date',
-                    [$firstDateOfCurrentMonth, $lastDateOfCurrentMonth]
-                )->sum('price');
-            if ($totalExpense >= $user->expense_limit) {
-                // send email
-                Mail::to($user)->send(new ExpenseLimitAlert($user));
+            if ($user->expense_limit > 0) {
+                $firstDateOfCurrentMonth = DateTime::createFromFormat('m-d-Y', date('m-01-Y'));
+                $lastDateOfCurrentMonth = DateTime::createFromFormat('m-d-Y', date('m-t-Y'));
+                $totalExpense = Expense::where('user_id', $user->id)
+                    ->whereBetween(
+                        'date',
+                        [$firstDateOfCurrentMonth, $lastDateOfCurrentMonth]
+                    )->sum('price');
+                if ($totalExpense >= $user->expense_limit) {
+                    // send email
+                    Mail::to($user)->send(new ExpenseLimitAlert($user));
+                }
             }
 
             return $this->createdResponse($expense, 'Expense created');
