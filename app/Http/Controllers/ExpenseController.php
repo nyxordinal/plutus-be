@@ -7,6 +7,7 @@ use App\Exceptions\ExpenseTypeException;
 use App\Mail\ExpenseLimitAlert;
 use App\Models\Expense;
 use App\Models\User;
+use DateInterval;
 use DateTime;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -87,7 +88,9 @@ class ExpenseController extends Controller
             // check expense limit
             if ($user->expense_limit > 0) {
                 $firstDateOfCurrentMonth = DateTime::createFromFormat('m-d-Y', date('m-01-Y'));
+                $firstDateOfCurrentMonth = $firstDateOfCurrentMonth->sub(new DateInterval('P1D'));
                 $lastDateOfCurrentMonth = DateTime::createFromFormat('m-d-Y', date('m-t-Y'));
+                $lastDateOfCurrentMonth = $lastDateOfCurrentMonth->add(new DateInterval('P1D'));
                 $totalExpense = Expense::where('user_id', $user->id)
                     ->whereBetween(
                         'date',
