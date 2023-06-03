@@ -91,6 +91,10 @@ docker run -d -p {host-port}:8001 --name plutus-be \
 > Or you can add `--net="host"` in `docker run` command and then for DB_HOST you can use `"localhost"`.  
 > If you use `--net="host"` in `docker run` command, `-p {host-port}:8001` must be removed from `docker run` command
 
+## Notes
+
+After doing your changes, you might want to run `tlint` command to run the linter
+
 ## Developer Team
 
 Developed with passion by [Nyxordinal](https://github.com/nyxordinal)
