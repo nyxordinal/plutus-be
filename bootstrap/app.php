@@ -62,6 +62,7 @@ $app->singleton(
 $app->configure('app');
 $app->configure('cors');
 $app->configure('mail');
+$app->configure('queue');
 
 
 /*
@@ -102,6 +103,7 @@ $app->register(Flipbox\LumenGenerator\LumenGeneratorServiceProvider::class);
 $app->register(Fruitcake\Cors\CorsServiceProvider::class);
 $app->register(Tymon\JWTAuth\Providers\LumenServiceProvider::class);
 $app->register(Illuminate\Mail\MailServiceProvider::class);
+$app->register(Illuminate\Queue\QueueServiceProvider::class);
 
 
 $app->alias('mail.manager', Illuminate\Mail\MailManager::class);

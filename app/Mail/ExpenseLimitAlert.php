@@ -4,7 +4,6 @@ namespace App\Mail;
 
 use App\Models\User;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
@@ -20,13 +19,21 @@ class ExpenseLimitAlert extends Mailable
     public $user;
 
     /**
+     * Current total expense.
+     *
+     * @var double
+     */
+    public $totalExpense;
+
+    /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct(User $user)
+    public function __construct(User $user, $totalExpense)
     {
         $this->user = $user;
+        $this->totalExpense = $totalExpense;
     }
 
     /**

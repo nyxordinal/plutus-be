@@ -12,4 +12,4 @@ RUN cd "/app" && cp .env.example .env && composer install
 WORKDIR /app
 
 EXPOSE 8001
-CMD ["sh", "-c", "php artisan key:generate && php -S 0.0.0.0:8001 -t public"]
+CMD ["sh", "-c", "php artisan key:generate && php -S 0.0.0.0:8001 -t public & php artisan queue:listen --tries=3"]

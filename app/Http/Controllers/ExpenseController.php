@@ -4,14 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Enums\ExpenseType;
 use App\Exceptions\ExpenseTypeException;
-use App\Mail\ExpenseLimitAlert;
+use App\Jobs\SendEmailJob;
 use App\Models\Expense;
 use App\Models\User;
-use DateInterval;
-use DateTime;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 
 class ExpenseController extends Controller
 {
@@ -86,11 +84,12 @@ class ExpenseController extends Controller
             ]);
 
             // check expense limit
-            if ($user->expense_limit > 0) {
-                $firstDateOfCurrentMonth = DateTime::createFromFormat('m-d-Y', date('m-01-Y'));
-                $firstDateOfCurrentMonth = $firstDateOfCurrentMonth->sub(new DateInterval('P1D'));
-                $lastDateOfCurrentMonth = DateTime::createFromFormat('m-d-Y', date('m-t-Y'));
-                $lastDateOfCurrentMonth = $lastDateOfCurrentMonth->add(new DateInterval('P1D'));
+            $currentDateTime = Carbon::now();
+            if ($user->expense_limit > 0 && $this->checkNotSameMonthAndYear($currentDateTime, $user->last_notif_date)) {
+                $firstDateOfCurrentMonth = Carbon::now()->startOfMonth();
+                $firstDateOfCurrentMonth = $firstDateOfCurrentMonth->subDay();
+                $lastDateOfCurrentMonth = Carbon::now()->endOfMonth();
+                $lastDateOfCurrentMonth = $lastDateOfCurrentMonth->addDay();
                 $totalExpense = Expense::where('user_id', $user->id)
                     ->whereBetween(
                         'date',
@@ -98,7 +97,10 @@ class ExpenseController extends Controller
                     )->sum('price');
                 if ($totalExpense >= $user->expense_limit) {
                     // send email
-                    Mail::to($user)->send(new ExpenseLimitAlert($user));
+                    dispatch(new SendEmailJob($user->email, $user, $totalExpense));
+                    $user->is_notif_sent = true;
+                    $user->last_notif_date = $currentDateTime;
+                    $user->save();
                 }
             }
 
@@ -106,6 +108,13 @@ class ExpenseController extends Controller
         } catch (\Exception $exception) {
             return $this->errorResponse($exception);
         }
+    }
+
+    private function checkNotSameMonthAndYear($date1, $date2)
+    {
+        $carbonDate1 = Carbon::parse($date1);
+        $carbonDate2 = Carbon::parse($date2);
+        return $carbonDate1->month !== $carbonDate2->month && $carbonDate1->year !== $carbonDate2->year;
     }
 
     public function updateExpense(Request $request)
