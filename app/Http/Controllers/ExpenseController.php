@@ -98,7 +98,6 @@ class ExpenseController extends Controller
                 if ($totalExpense >= $user->expense_limit) {
                     // send email
                     dispatch(new SendEmailJob($user->email, $user, $totalExpense));
-                    $user->is_notif_sent = true;
                     $user->last_notif_date = $currentDateTime;
                     $user->save();
                 }

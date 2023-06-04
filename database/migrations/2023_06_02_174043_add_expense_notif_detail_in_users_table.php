@@ -15,7 +15,6 @@ class AddExpenseNotifDetailInUsersTable extends Migration
     public function up()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->boolean('is_notif_sent')->default(false);
             $table->date('last_notif_date')->default(Carbon::createFromDate(1970, 1, 1));
         });
     }
@@ -29,7 +28,6 @@ class AddExpenseNotifDetailInUsersTable extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->dropColumn('last_notif_date');
-            $table->dropColumn('is_notif_sent');
         });
     }
 }
