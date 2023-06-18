@@ -30,7 +30,12 @@ class ExpenseController extends Controller
                 ->groupBy('yearmonth')
                 ->orderBy('yearmonth', 'desc')
                 ->get();
-            return $this->successResponse($expenseSummary);
+            $total = $expenseSummary->sum('amount');
+            return $this->successResponse([
+                "total" => $total,
+                "avg" => $total / $expenseSummary->count(),
+                "data" => $expenseSummary
+            ]);
         } catch (\Exception $exception) {
             return $this->errorResponse($exception);
         }

@@ -26,7 +26,12 @@ class IncomeController extends Controller
                 ->groupBy('yearmonth')
                 ->orderBy('yearmonth', 'desc')
                 ->get();
-            return $this->successResponse($incomeSummary);
+            $total = $incomeSummary->sum('amount');
+            return $this->successResponse([
+                "total" => $total,
+                "avg" => $total / $incomeSummary->count(),
+                "data" => $incomeSummary
+            ]);
         } catch (\Exception $exception) {
             return $this->errorResponse($exception);
         }
