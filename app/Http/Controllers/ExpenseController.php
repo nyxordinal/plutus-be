@@ -68,7 +68,7 @@ class ExpenseController extends Controller
             $this->validate($request, [
                 'name' => 'required|string|max:100',
                 'type' => 'required|numeric',
-                'price' => 'required|numeric|gt:0',
+                'price' => 'required|numeric|gt:0|max:10000000000',
                 'date' => 'required|date',
             ]);
 

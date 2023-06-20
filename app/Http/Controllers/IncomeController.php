@@ -55,7 +55,7 @@ class IncomeController extends Controller
         try {
             $this->validate($request, [
                 'source' => 'required|string|max:100',
-                'amount' => 'required|numeric|gt:0',
+                'amount' => 'required|numeric|gt:0|max:10000000000',
                 'date' => 'required|date',
             ]);
 
