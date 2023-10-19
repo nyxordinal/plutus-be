@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Mail\PasswordReset;
+use App\Mail\RegistrationNotification;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -95,6 +96,9 @@ class AuthController extends Controller
             $user->email = $request->email;
             $user->password = Hash::make($request->password);
             $user->save();
+
+            // send email to admin
+            Mail::to($user)->send(new RegistrationNotification($user));
 
             return $this->createdResponse(null, 'Registration is successful, you can login using your new account');
         } catch (\Exception $exception) {
