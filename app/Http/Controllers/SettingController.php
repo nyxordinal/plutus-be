@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class SettingController extends Controller
 {
@@ -19,7 +20,8 @@ class SettingController extends Controller
             $user = User::find(auth('user')->user()->id);
             return $this->successResponse(['settings' => [
                 'expense_limit' => $user->expense_limit,
-                'last_notif_date' => $user->last_notif_date
+                'last_notif_date' => $user->last_notif_date,
+                'currency' => $user->currency
             ]]);
         } catch (\Exception $exception) {
             return $this->errorResponse($exception);
@@ -32,12 +34,17 @@ class SettingController extends Controller
             $this->validate($request, [
                 'expense_limit' => 'required|numeric|min:1',
                 'is_reset_notif' => 'required|boolean',
+                'currency' => [
+                    'required',
+                    Rule::in(['USD', 'IDR']),
+                ],
             ]);
             $user = User::find(auth('user')->user()->id);
             $user->expense_limit = $request->expense_limit;
             if ($request->is_reset_notif) {
                 $user->last_notif_date = Carbon::createFromDate(1970, 1, 1);
             }
+            $user->currency = $request->currency;
             $user->save();
             return $this->successResponse(null, 'Settings updated');
         } catch (\Exception $exception) {
