@@ -36,7 +36,7 @@ class SettingController extends Controller
                 'is_reset_notif' => 'required|boolean',
                 'currency' => [
                     'required',
-                    Rule::in(['USD', 'IDR']),
+                    Rule::in(['AUD', 'CAD', 'CHF', 'CNY', 'EUR', 'GBP', 'HKD', 'IDR', 'INR', 'JPY', 'KRW', 'MYR', 'MXN', 'NOK', 'NZD', 'SEK', 'SGD', 'USD']),
                 ],
             ]);
             $user = User::find(auth('user')->user()->id);
