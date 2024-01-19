@@ -18,23 +18,29 @@ class ExpenseController extends Controller
         $this->middleware('auth:user');
     }
 
-    public function getExpenseSummary()
+    public function getExpenseSummary(Request $request)
     {
         try {
+            $dataPerPage = $request->query('count', '5');
             $user = User::find(auth('user')->user()->id);
-            $expenseSummary = $user->expenses()
+            $expensesSummary = $user->expenses()
                 ->select(
                     DB::raw('DATE_FORMAT(date,\'%Y-%m\') as yearmonth'),
                     DB::raw('SUM(price) as amount')
                 )
                 ->groupBy('yearmonth')
                 ->orderBy('yearmonth', 'desc')
-                ->get();
-            $total = $expenseSummary->sum('amount');
+                ->paginate($dataPerPage);
+            $totals = $user->expenses()
+                ->select(
+                    DB::raw('SUM(price) as total'),
+                    DB::raw('COUNT(DISTINCT DATE_FORMAT(date, \'%Y-%m\')) as month_count')
+                )
+                ->first();
             return $this->successResponse([
-                "total" => $total,
-                "avg" => $total / $expenseSummary->count(),
-                "data" => $expenseSummary
+                "total" => $totals->total,
+                "avg" => $totals->total / $totals->month_count,
+                "data" => $expensesSummary
             ]);
         } catch (\Exception $exception) {
             return $this->errorResponse($exception);

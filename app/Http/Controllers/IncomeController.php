@@ -14,9 +14,10 @@ class IncomeController extends Controller
         $this->middleware('auth:user');
     }
 
-    public function getIncomeSummary()
+    public function getIncomeSummary(Request $request)
     {
         try {
+            $dataPerPage = $request->query('count', '5');
             $user = User::find(auth('user')->user()->id);
             $incomeSummary = $user->incomes()
                 ->select(
@@ -25,11 +26,16 @@ class IncomeController extends Controller
                 )
                 ->groupBy('yearmonth')
                 ->orderBy('yearmonth', 'desc')
-                ->get();
-            $total = $incomeSummary->sum('amount');
+                ->paginate($dataPerPage);
+            $totals = $user->incomes()
+                ->select(
+                    DB::raw('SUM(amount) as total'),
+                    DB::raw('COUNT(DISTINCT DATE_FORMAT(date, \'%Y-%m\')) as month_count')
+                )
+                ->first();
             return $this->successResponse([
-                "total" => $total,
-                "avg" => $total / $incomeSummary->count(),
+                "total" => $totals->total,
+                "avg" => $totals->total / $totals->month_count,
                 "data" => $incomeSummary
             ]);
         } catch (\Exception $exception) {
