@@ -42,7 +42,7 @@ jobs:
       - name: Trigger Deployment Webhook
         uses: fjogeleit/http-request-action@v1
         with:
-          url: "https://webhook.nyxordinal.tech/deploy"
+          url: "https://webhook.nyxordinal.dev/deploy"
           method: "POST"
           customHeaders: '{"Content-Type": "application/json"}'
           data: '{"app": "plutus", "token": "${{ secrets.DEPLOY_TOKEN }}"}'

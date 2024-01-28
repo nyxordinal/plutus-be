@@ -35,7 +35,7 @@ class RegistrationNotification extends Mailable
      */
     public function build()
     {
-        return $this->from('no-reply@nyxordinal.tech', 'Nyxordinal')
+        return $this->from('no-reply@nyxordinal.dev', 'Nyxordinal')
             ->subject('Plutus Nyxordinal | New Account Registration Notification')
             ->view('admin-registration-notification');
     }

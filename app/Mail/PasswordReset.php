@@ -35,7 +35,7 @@ class PasswordReset extends Mailable
      */
     public function build()
     {
-        return $this->from('no-reply@nyxordinal.tech', 'Nyxordinal')
+        return $this->from('no-reply@nyxordinal.dev', 'Nyxordinal')
             ->subject('Plutus Nyxordinal | Password Reset')
             ->view('password-reset-mail');
     }

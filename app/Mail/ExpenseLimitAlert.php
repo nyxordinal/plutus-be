@@ -43,7 +43,7 @@ class ExpenseLimitAlert extends Mailable
      */
     public function build()
     {
-        return $this->from('no-reply@nyxordinal.tech', 'Nyxordinal')
+        return $this->from('no-reply@nyxordinal.dev', 'Nyxordinal')
             ->subject('Important: Your expense exceeds your expense limit!')
             ->view('expense-limit-alert');
     }
