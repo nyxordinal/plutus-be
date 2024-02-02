@@ -34,6 +34,10 @@ $router->group(
             $router->post('reset', 'AuthController@resetPassword');
         });
 
+        $router->group(['prefix' => 'home'], function ($router) {
+            $router->get('/stat', 'HomeController@getSummaryStat');
+        });
+
         $router->group(['prefix' => 'expense'], function ($router) {
             $router->post('/delete/bulk', 'ExpenseController@bulkDeleteExpense');
             $router->get('/summary', 'ExpenseController@getExpenseSummary');

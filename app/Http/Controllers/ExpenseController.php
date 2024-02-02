@@ -31,17 +31,7 @@ class ExpenseController extends Controller
                 ->groupBy('yearmonth')
                 ->orderBy('yearmonth', 'desc')
                 ->paginate($dataPerPage);
-            $totals = $user->expenses()
-                ->select(
-                    DB::raw('SUM(price) as total'),
-                    DB::raw('COUNT(DISTINCT DATE_FORMAT(date, \'%Y-%m\')) as month_count')
-                )
-                ->first();
-            return $this->successResponse([
-                "total" => $totals->total,
-                "avg" => $totals->total / $totals->month_count,
-                "data" => $expensesSummary
-            ]);
+            return $this->successResponse($expensesSummary);
         } catch (\Exception $exception) {
             return $this->errorResponse($exception);
         }

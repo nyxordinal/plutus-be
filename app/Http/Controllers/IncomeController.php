@@ -27,17 +27,7 @@ class IncomeController extends Controller
                 ->groupBy('yearmonth')
                 ->orderBy('yearmonth', 'desc')
                 ->paginate($dataPerPage);
-            $totals = $user->incomes()
-                ->select(
-                    DB::raw('SUM(amount) as total'),
-                    DB::raw('COUNT(DISTINCT DATE_FORMAT(date, \'%Y-%m\')) as month_count')
-                )
-                ->first();
-            return $this->successResponse([
-                "total" => $totals->total,
-                "avg" => $totals->total / $totals->month_count,
-                "data" => $incomeSummary
-            ]);
+            return $this->successResponse($incomeSummary);
         } catch (\Exception $exception) {
             return $this->errorResponse($exception);
         }
