@@ -36,9 +36,17 @@ class IncomeController extends Controller
     public function getIncome(Request $request)
     {
         try {
+            $startDate = $request->query('start', '0001-01-01 00:00:00');
+            $endDate = $request->query('end', '9999-12-31 23:59:59');
+            $source = $request->query('source', '');
             $dataPerPage = $request->query('count', '5');
             $user = User::find(auth('user')->user()->id);
-            $incomes = $user->incomes()->orderBy('date', 'desc')
+            $incomes = $user->incomes()->where([
+                ['source', 'like', '%' . $source . '%'],
+                ['date', '>=', $startDate],
+                ['date', '<=', $endDate],
+            ])
+                ->orderBy('date', 'desc')
                 ->paginate($dataPerPage);
             return $this->successResponse($incomes);
         } catch (\Exception $exception) {
