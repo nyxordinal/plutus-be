@@ -63,6 +63,7 @@ $app->configure('app');
 $app->configure('cors');
 $app->configure('mail');
 $app->configure('queue');
+$app->configure('logging');
 
 
 /*
@@ -77,7 +78,7 @@ $app->configure('queue');
 */
 
 $app->middleware([
-    // App\Http\Middleware\ExampleMiddleware::class
+    App\Http\Middleware\LogContextMiddleware::class,
     Fruitcake\Cors\HandleCors::class,
 ]);
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\ExpenseType;
+use App\Enums\MailType;
 use App\Exceptions\ExpenseTypeException;
 use App\Jobs\SendEmailJob;
 use App\Models\Expense;
@@ -10,6 +11,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ExpenseController extends Controller
 {
@@ -21,6 +23,7 @@ class ExpenseController extends Controller
     public function getExpenseSummary(Request $request)
     {
         try {
+            Log::info("fetching expense summary", ["req_query" => request()->query()]);
             $dataPerPage = $request->query('count', '5');
             $user = User::find(auth('user')->user()->id);
             $expensesSummary = $user->expenses()
@@ -31,8 +34,10 @@ class ExpenseController extends Controller
                 ->groupBy('yearmonth')
                 ->orderBy('yearmonth', 'desc')
                 ->paginate($dataPerPage);
+            Log::info("fetch expense summary success");
             return $this->successResponse($expensesSummary);
         } catch (\Exception $exception) {
+            Log::error("fetch expense summary failed", ['exception' => $exception]);
             return $this->errorResponse($exception);
         }
     }
@@ -40,6 +45,7 @@ class ExpenseController extends Controller
     public function getExpense(Request $request)
     {
         try {
+            Log::info("fetching expense", ["req_query" => request()->query()]);
             $startDate = $request->query('start', '0001-01-01 00:00:00');
             $endDate = $request->query('end', '9999-12-31 23:59:59');
             $name = $request->query('name', '');
@@ -52,8 +58,10 @@ class ExpenseController extends Controller
             ])
                 ->orderBy('date', 'desc')
                 ->paginate($dataPerPage);
+            Log::info("fetch expense success");
             return $this->successResponse($expenses);
         } catch (\Exception $exception) {
+            Log::error("fetch expense failed", ['exception' => $exception]);
             return $this->errorResponse($exception);
         }
     }
@@ -61,6 +69,7 @@ class ExpenseController extends Controller
     public function createExpense(Request $request)
     {
         try {
+            Log::info("creating expense", ["req_body" => request()->all()]);
             $this->validate($request, [
                 'name' => 'required|string|max:100',
                 'type' => 'required|numeric',
@@ -84,8 +93,12 @@ class ExpenseController extends Controller
                 'date' => $request->date,
             ]);
 
-            // check expense limit
             $currentDateTime = Carbon::now();
+
+            // check daily expense limit
+            $this->checkDailyLimit($user, $currentDateTime);
+
+            // check expense limit
             if ($user->expense_limit > 0 && $this->checkNotSameMonthAndYear($currentDateTime, $user->last_notif_date)) {
                 $firstDateOfCurrentMonth = Carbon::now()->startOfMonth();
                 $firstDateOfCurrentMonth = $firstDateOfCurrentMonth->subDay();
@@ -98,15 +111,32 @@ class ExpenseController extends Controller
                     )->sum('price');
                 if ($totalExpense >= $user->expense_limit) {
                     // send email
-                    dispatch(new SendEmailJob($user->email, $user, $totalExpense));
+                    Log::info("total expense has exceed user's expense limit, sending expense limit notif email");
+                    dispatch(new SendEmailJob($user->email, $user, $totalExpense, MailType::ExpenseLimit()));
+                    Log::info("job to send expense limit notif email is created");
                     $user->last_notif_date = $currentDateTime;
                     $user->save();
                 }
             }
 
+            Log::info("create expense success");
             return $this->createdResponse($expense, 'Expense created');
         } catch (\Exception $exception) {
+            Log::error("create expense failed", ['exception' => $exception]);
             return $this->errorResponse($exception);
+        }
+    }
+
+    private function checkDailyLimit($user, $currentDateTime)
+    {
+        $todayDate = $currentDateTime->format('Y-m-d');
+        $totalDailyExpense = Expense::where('user_id', $user->id)
+            ->whereBetween('date', [$todayDate, $todayDate])
+            ->sum('price');
+        if ($totalDailyExpense >= $user->expense_limit_daily) {
+            Log::info("total daily expense has exceeded user's daily expense limit, sending daily expense limit notif email");
+            dispatch(new SendEmailJob($user->email, $user, $totalDailyExpense, MailType::ExpenseDailyLimit()));
+            Log::info("job to send daily expense limit notif email is created");
         }
     }
 
@@ -120,6 +150,7 @@ class ExpenseController extends Controller
     public function updateExpense(Request $request)
     {
         try {
+            Log::info("updating expense", ["req_body" => request()->all()]);
             $this->validate($request, [
                 'id' => 'required|exists:expenses,id',
                 'name' => 'string|max:100',
@@ -144,8 +175,10 @@ class ExpenseController extends Controller
             $expense->date = $request->date ? $request->date : $expense->date;
             $expense->save();
 
+            Log::info("update expense success");
             return $this->successResponse($expense, 'Expense updated');
         } catch (\Exception $exception) {
+            Log::error("update expense failed", ['exception' => $exception]);
             return $this->errorResponse($exception);
         }
     }
@@ -153,6 +186,7 @@ class ExpenseController extends Controller
     public function bulkDeleteExpense(Request $request)
     {
         try {
+            Log::info("deleting expense", ["req_body" => request()->all()]);
             $this->validate($request, [
                 'ids' => 'required|array|min:1',
             ]);
@@ -160,8 +194,10 @@ class ExpenseController extends Controller
             // bulk delete expense
             Expense::destroy($request->ids);
 
+            Log::info("delete expense success");
             return $this->successResponse(null, 'Expenses deleted');
         } catch (\Exception $exception) {
+            Log::error("delete expense failed", ['exception' => $exception]);
             return $this->errorResponse($exception);
         }
     }

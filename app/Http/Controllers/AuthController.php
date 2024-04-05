@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use phpseclib\Crypt\RSA;
 use Illuminate\Support\Str;
@@ -51,6 +52,7 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         try {
+            Log::info("start login account", ['req_body' => request()->all()]);
             $this->validate($request, [
                 'email' => 'required|email',
                 'enc_password' => 'required',
@@ -72,11 +74,14 @@ class AuthController extends Controller
             if ($token) {
                 $user = User::where('email', $request->email)->first();
                 $json_user = $user->toArray();
+                Log::info("login success");
                 return $this->successLoginResponse($json_user, $token);
             } else {
+                Log::info("login failed because email or password is wrong");
                 throw new AuthorizationException('Your email or password is wrong');
             }
         } catch (\Exception $exception) {
+            Log::error("account login failed", ['exception' => $exception]);
             return $this->errorResponse($exception);
         }
     }
@@ -84,6 +89,7 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         try {
+            Log::info("registering new account", ['req_body' => request()->all()]);
             $this->validate($request, [
                 'name' => 'required|max:100',
                 'email' => 'required|email|unique:users,email',
@@ -98,10 +104,13 @@ class AuthController extends Controller
             $user->save();
 
             // send email to admin
+            Log::info("sending new account registration email notif to admin");
             Mail::to($user)->send(new RegistrationNotification($user));
 
+            Log::info("register new account success");
             return $this->createdResponse(null, 'Registration is successful, you can login using your new account');
         } catch (\Exception $exception) {
+            Log::error("account register failed", ['exception' => $exception]);
             return $this->errorResponse($exception);
         }
     }
@@ -127,6 +136,7 @@ class AuthController extends Controller
     public function sendResetPasswordEmail(Request $request)
     {
         try {
+            Log::info("start send reset password email", ['req_body' => request()->all()]);
             $this->validate($request, [
                 'email' => 'required|email',
             ]);
@@ -142,11 +152,14 @@ class AuthController extends Controller
                 $user->save();
 
                 // send email
+                Log::info("sending reset password email");
                 Mail::to($user)->send(new PasswordReset($user));
             }
 
+            Log::info("send reset password email success");
             return $this->successResponse(null, "Reset password email has been sent to your email");
         } catch (\Exception $exception) {
+            Log::error("send reset password email failed", ['exception' => $exception]);
             return $this->errorResponse($exception);
         }
     }
@@ -154,6 +167,7 @@ class AuthController extends Controller
     public function resetPassword(Request $request)
     {
         try {
+            Log::info("resetting password for " . $request->email);
             $this->validate($request, [
                 'email' => 'required|email',
                 'token' => 'required',
@@ -170,11 +184,13 @@ class AuthController extends Controller
 
             // validate timestamp
             if (!self::validateTimestamp($timestamp)) {
+                Log::info("resetting password failed because timestamp in request is invalid");
                 throw new AuthorizationException('Request is invalid');
             }
 
             // validate reset token
             if (strcmp($request->token, $user->reset_token) != 0) {
+                Log::info("resetting password failed because reset password token is invalid");
                 throw new AuthorizationException('Token is invalid, please request a new reset password email');
             }
 
@@ -184,6 +200,7 @@ class AuthController extends Controller
 
             return $this->successResponse(null, "Reset password is success, you can login with your new password");
         } catch (\Exception $exception) {
+            Log::error("reset password failed", ['exception' => $exception]);
             return $this->errorResponse($exception);
         }
     }

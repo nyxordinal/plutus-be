@@ -6,6 +6,7 @@ use App\Models\Income;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class IncomeController extends Controller
 {
@@ -17,6 +18,7 @@ class IncomeController extends Controller
     public function getIncomeSummary(Request $request)
     {
         try {
+            Log::info("fetching income summary", ["req_query" => request()->query()]);
             $dataPerPage = $request->query('count', '5');
             $user = User::find(auth('user')->user()->id);
             $incomeSummary = $user->incomes()
@@ -27,8 +29,10 @@ class IncomeController extends Controller
                 ->groupBy('yearmonth')
                 ->orderBy('yearmonth', 'desc')
                 ->paginate($dataPerPage);
+            Log::info("fetch income summary success");
             return $this->successResponse($incomeSummary);
         } catch (\Exception $exception) {
+            Log::error("fetch income summary failed", ['exception' => $exception]);
             return $this->errorResponse($exception);
         }
     }
@@ -36,6 +40,7 @@ class IncomeController extends Controller
     public function getIncome(Request $request)
     {
         try {
+            Log::info("fetching income", ["req_query" => request()->query()]);
             $startDate = $request->query('start', '0001-01-01 00:00:00');
             $endDate = $request->query('end', '9999-12-31 23:59:59');
             $source = $request->query('source', '');
@@ -48,8 +53,10 @@ class IncomeController extends Controller
             ])
                 ->orderBy('date', 'desc')
                 ->paginate($dataPerPage);
+            Log::info("fetch income success");
             return $this->successResponse($incomes);
         } catch (\Exception $exception) {
+            Log::error("fetch income failed", ['exception' => $exception]);
             return $this->errorResponse($exception);
         }
     }
@@ -57,6 +64,7 @@ class IncomeController extends Controller
     public function createIncome(Request $request)
     {
         try {
+            Log::info("creating income", ["req_body" => request()->all()]);
             $this->validate($request, [
                 'source' => 'required|string|max:100',
                 'amount' => 'required|numeric|gt:0|max:10000000000',
@@ -71,8 +79,10 @@ class IncomeController extends Controller
                 'date' => $request->date,
             ]);
 
+            Log::info("create income success");
             return $this->createdResponse($income, 'Income created');
         } catch (\Exception $exception) {
+            Log::error("create income failed", ['exception' => $exception]);
             return $this->errorResponse($exception);
         }
     }
@@ -80,6 +90,7 @@ class IncomeController extends Controller
     public function updateIncome(Request $request)
     {
         try {
+            Log::info("updating income", ["req_body" => request()->all()]);
             $this->validate($request, [
                 'id' => 'required|exists:incomes,id',
                 'source' => 'string|max:100',
@@ -94,8 +105,10 @@ class IncomeController extends Controller
             $expense->date = $request->date ? $request->date : $expense->date;
             $expense->save();
 
+            Log::info("update income success");
             return $this->successResponse($expense, 'Income updated');
         } catch (\Exception $exception) {
+            Log::error("update income failed", ['exception' => $exception]);
             return $this->errorResponse($exception);
         }
     }
@@ -103,6 +116,7 @@ class IncomeController extends Controller
     public function bulkDeleteIncome(Request $request)
     {
         try {
+            Log::info("deleting income", ["req_body" => request()->all()]);
             $this->validate($request, [
                 'ids' => 'required|array|min:1',
             ]);
@@ -110,8 +124,10 @@ class IncomeController extends Controller
             // bulk delete income
             Income::destroy($request->ids);
 
+            Log::info("delete income success");
             return $this->successResponse(null, 'Incomes deleted');
         } catch (\Exception $exception) {
+            Log::error("delete income failed", ['exception' => $exception]);
             return $this->errorResponse($exception);
         }
     }
