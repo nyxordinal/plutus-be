@@ -129,6 +129,12 @@ class ExpenseController extends Controller
 
     private function checkDailyLimit($user, $currentDateTime)
     {
+        // ignore the daily limit if equal or less than 0
+        // 0 is default value of daily limit
+        if ($user->expense_limit_daily <= 0) {
+            return;
+        }
+
         $todayDate = $currentDateTime->format('Y-m-d');
         $totalDailyExpense = Expense::where('user_id', $user->id)
             ->whereBetween('date', [$todayDate, $todayDate])
