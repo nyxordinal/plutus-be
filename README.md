@@ -48,8 +48,14 @@ Backend service of Plutus, a monetary management system from Nyxordinal
 A. Publish Development Changes
 
 1. Do your changes
-2. Build plutus-be docker image  
-   `docker build --platform linux/amd64 -t nyxordinal/plutus-be:{tag} .`
+2. Build plutus-be docker image
+    ```sh
+    docker build \
+    --build-arg NEW_RELIC_AGENT_VERSION=<new_relic_version> \
+    --build-arg NEW_RELIC_LICENSE_KEY=<license_key> \
+    --build-arg NEW_RELIC_APPNAME=<app_name> \
+    -t nyxordinal/plutus-be:{tag} .
+    ```
 3. Push docker image to nyxordinal registry  
    `docker push nyxordinal/plutus-be:{tag}`
 

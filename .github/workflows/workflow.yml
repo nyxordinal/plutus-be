@@ -45,7 +45,10 @@ jobs:
             ${{ steps.meta.outputs.tags }}
             nyxordinal/plutus-be:${{ env.COMMIT_SHA }}
           labels: ${{ steps.meta.outputs.labels }}
-
+          build-args: |
+            NEW_RELIC_AGENT_VERSION=${{ secrets.NEW_RELIC_AGENT_VERSION }}
+            NEW_RELIC_LICENSE_KEY=${{ secrets.NEW_RELIC_LICENSE_KEY }}
+            NEW_RELIC_APPNAME=${{ secrets.NEW_RELIC_APPNAME }}
   deploy:
     name: Deploy
     needs: build_and_push
