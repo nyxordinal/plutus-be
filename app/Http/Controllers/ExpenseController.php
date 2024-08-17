@@ -69,61 +69,68 @@ class ExpenseController extends Controller
     public function createExpense(Request $request)
     {
         try {
-            Log::info("creating expense", ["req_body" => request()->all()]);
-            $this->validate($request, [
-                'name' => 'required|string|max:100',
-                'type' => 'required|numeric',
-                'price' => 'required|numeric|gt:0|max:10000000000',
-                'date' => 'required|date',
-            ]);
-
-
-            // validate expense type
-            $type =  ExpenseType::coerce($request->type);
-            if (!$type) {
-                throw new ExpenseTypeException('expense type invalid');
-            }
-
-            // Create new expense
-            $user = User::find(auth('user')->user()->id);
-            $expense = $user->expenses()->create([
-                'name' => $request->name,
-                'type' => $type->value,
-                'price' => $request->price,
-                'date' => $request->date,
-            ]);
-
-            $currentDateTime = Carbon::now();
-
-            // check daily expense limit
-            $this->checkDailyLimit($user, $currentDateTime);
-
-            // check expense limit
-            if ($user->expense_limit > 0 && $this->checkNotSameMonthAndYear($currentDateTime, $user->last_notif_date)) {
-                $firstDateOfCurrentMonth = Carbon::now()->startOfMonth();
-                $firstDateOfCurrentMonth = $firstDateOfCurrentMonth->subDay();
-                $lastDateOfCurrentMonth = Carbon::now()->endOfMonth();
-                $lastDateOfCurrentMonth = $lastDateOfCurrentMonth->addDay();
-                $totalExpense = Expense::where('user_id', $user->id)
-                    ->whereBetween(
-                        'date',
-                        [$firstDateOfCurrentMonth, $lastDateOfCurrentMonth]
-                    )->sum('price');
-                if ($totalExpense >= $user->expense_limit) {
-                    // send email
-                    Log::info("total expense has exceed user's expense limit, sending expense limit notif email");
-                    dispatch(new SendEmailJob($user->email, $user, $totalExpense, MailType::ExpenseLimit()));
-                    Log::info("job to send expense limit notif email is created");
-                    $user->last_notif_date = $currentDateTime;
-                    $user->save();
-                }
-            }
-
+            $user = auth('user')->user();
+            $this->processCreateExpense($request, $user->id);
             Log::info("create expense success");
-            return $this->createdResponse($expense, 'Expense created');
+            return $this->createdResponse(null, 'Expense created');
         } catch (\Exception $exception) {
             Log::error("create expense failed", ['exception' => $exception]);
             return $this->errorResponse($exception);
+        }
+    }
+
+    private function processCreateExpense(Request $request, $userId)
+    {
+        $this->validate($request, [
+            'name' => 'required|string|max:100',
+            'type' => 'required|numeric',
+            'price' => 'required|numeric|gt:0|max:10000000000',
+            'date' => 'required|date',
+        ]);
+
+        // Validate expense type
+        $type = ExpenseType::coerce($request->type);
+        if (!$type) {
+            throw new ExpenseTypeException('expense type invalid');
+        }
+
+        // Create new expense
+        $user = User::find($userId);
+        if (!$user) {
+            throw new \Exception('User not found.');
+        }
+
+        $expense = $user->expenses()->create([
+            'name' => $request->name,
+            'type' => $type->value,
+            'price' => $request->price,
+            'date' => $request->date,
+        ]);
+
+        $currentDateTime = Carbon::now();
+
+        // Check daily expense limit
+        $this->checkDailyLimit($user, $currentDateTime);
+
+        // Check expense limit
+        if ($user->expense_limit > 0 && $this->checkNotSameMonthAndYear($currentDateTime, $user->last_notif_date)) {
+            $firstDateOfCurrentMonth = Carbon::now()->startOfMonth();
+            $firstDateOfCurrentMonth = $firstDateOfCurrentMonth->subDay();
+            $lastDateOfCurrentMonth = Carbon::now()->endOfMonth();
+            $lastDateOfCurrentMonth = $lastDateOfCurrentMonth->addDay();
+            $totalExpense = Expense::where('user_id', $user->id)
+                ->whereBetween(
+                    'date',
+                    [$firstDateOfCurrentMonth, $lastDateOfCurrentMonth]
+                )->sum('price');
+            if ($totalExpense >= $user->expense_limit) {
+                // Send email
+                Log::info("total expense has exceeded user's expense limit, sending expense limit notif email");
+                dispatch(new SendEmailJob($user->email, $user, $totalExpense, MailType::ExpenseLimit()));
+                Log::info("job to send expense limit notif email is created");
+                $user->last_notif_date = $currentDateTime;
+                $user->save();
+            }
         }
     }
 

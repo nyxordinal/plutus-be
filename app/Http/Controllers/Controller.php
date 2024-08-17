@@ -40,6 +40,11 @@ class Controller extends BaseController
         return $this->baseResponse(Response::HTTP_CREATED, $message, false, $data);
     }
 
+    public function failedResponse($message = 'Failed', $httpCode)
+    {
+        return $this->baseResponse($httpCode, $message, true);
+    }
+
     public function errorResponse(Exception $exception)
     {
         $httpCode = Response::HTTP_INTERNAL_SERVER_ERROR;
