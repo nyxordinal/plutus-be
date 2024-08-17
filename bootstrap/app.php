@@ -84,6 +84,7 @@ $app->middleware([
 
 $app->routeMiddleware([
     'auth' => App\Http\Middleware\Authenticate::class,
+    'verify.hmac.signature' => App\Http\Middleware\VerifyHmacSignature::class,
 ]);
 
 /*
@@ -105,6 +106,7 @@ $app->register(Fruitcake\Cors\CorsServiceProvider::class);
 $app->register(Tymon\JWTAuth\Providers\LumenServiceProvider::class);
 $app->register(Illuminate\Mail\MailServiceProvider::class);
 $app->register(Illuminate\Queue\QueueServiceProvider::class);
+$app->register(Illuminate\Redis\RedisServiceProvider::class);
 
 
 $app->alias('mail.manager', Illuminate\Mail\MailManager::class);
