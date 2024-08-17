@@ -16,9 +16,11 @@
         "fruitcake/laravel-cors": "^2.0",
         "illuminate/mail": "^8.83",
         "illuminate/queue": "^8.83",
+        "illuminate/redis": "^8.83",
         "laravel/lumen-framework": "^8.0",
         "nesbot/carbon": "^2.57",
         "phpseclib/phpseclib": "~2.0",
+        "predis/predis": "^2.2",
         "ramsey/uuid": "^4.2",
         "tymon/jwt-auth": "^1.0"
     },
