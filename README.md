@@ -78,7 +78,10 @@ docker run -d -p {host-port}:8001 --name plutus-be \
     --env DB_DATABASE=plutus_be \
     --env DB_USERNAME={your-db-username} \
     --env DB_PASSWORD={your-db-password} \
+    --env REDIS_HOST={your-redis-host} \
+    --env REDIS_PASSWORD={your-redis-password} \
     --env JWT_SECRET={your-jwt-secret} \
+    --env JWT_TTL={your-jwt-ttl} \
     --env RSA_PRIVATE_KEY={your-private-rsa-key} \
     --env MAIL_MAILER=smtp \
     --env MAIL_HOST=smtp.mailtrap.io \
