@@ -39,6 +39,13 @@ $router->group(
         });
 
         $router->group(['prefix' => 'expense'], function ($router) {
+            $router->group(['prefix' => 'draft'], function ($router) {
+                $router->get('/', 'ExpenseDraftController@getExpenseDrafts');
+                $router->put('/', 'ExpenseDraftController@updateExpenseDraft');
+                $router->post('/approve', 'ExpenseDraftController@approveExpenseDraft');
+                $router->post('/deny', 'ExpenseDraftController@denyExpenseDraft');
+            });
+
             $router->post('/delete/bulk', 'ExpenseController@bulkDeleteExpense');
             $router->get('/summary', 'ExpenseController@getExpenseSummary');
             $router->get('/', 'ExpenseController@getExpense');

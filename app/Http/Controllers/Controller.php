@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\EntityNotFoundException;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Response;
@@ -57,6 +58,8 @@ class Controller extends BaseController
             } else {
                 $errMessage = $error;
             }
+            $httpCode = Response::HTTP_BAD_REQUEST;
+        } elseif ($exception instanceof EntityNotFoundException) {
             $httpCode = Response::HTTP_BAD_REQUEST;
         } elseif (
             $exception instanceof JWTException ||

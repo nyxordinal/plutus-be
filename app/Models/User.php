@@ -20,7 +20,11 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
      * @var array
      */
     protected $fillable = [
-        'name', 'email', 'expense_limit', 'expense_limit_daily', 'last_notif_date'
+        'name',
+        'email',
+        'expense_limit',
+        'expense_limit_daily',
+        'last_notif_date'
     ];
 
     /**
@@ -29,7 +33,10 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
      * @var array
      */
     protected $hidden = [
-        'password', "created_at", "updated_at", "reset_token"
+        'password',
+        "created_at",
+        "updated_at",
+        "reset_token"
     ];
 
     /**
@@ -38,6 +45,14 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
     public function expenses()
     {
         return $this->hasMany(Expense::class);
+    }
+
+    /**
+     * Get the user's expense drafts.
+     */
+    public function expenseDrafts()
+    {
+        return $this->hasMany(ExpenseDraft::class, 'user_id', 'id');
     }
 
     /**

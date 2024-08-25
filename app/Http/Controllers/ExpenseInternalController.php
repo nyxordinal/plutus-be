@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Str;
 
 class ExpenseInternalController extends Controller
 {
@@ -39,20 +40,21 @@ class ExpenseInternalController extends Controller
 
             $user = User::find($request->user_id);
             if (!$user) {
-                throw new \Exception('User not found.');
+                throw new \Exception('User not found');
             }
 
-            $user->expenses()->create([
+            $user->expenseDrafts()->create([
+                'id' => Str::uuid(),
                 'name' => $request->name,
                 'type' => $type->value,
                 'price' => $request->price,
                 'date' => $request->date,
             ]);
 
-            Log::info('Expense created successfully', ['user_id' => $user->id]);
+            Log::info('Expense draft created successfully', ['user_id' => $user->id]);
             return $this->createdResponse(null, 'Expense created');
         } catch (\Exception $exception) {
-            Log::error('Failed to create expense', [
+            Log::error('Failed to create expense draft', [
                 'error_message' => $exception->getMessage(),
                 'request_body' => $request->all()
             ]);
