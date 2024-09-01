@@ -16,6 +16,7 @@ class ExpenseInternalController extends Controller
     {
         try {
             $this->validate($request, [
+                'message_id' => 'required|string',
                 'user_id' => 'required|exists:users,id',
                 'type' => 'required',
                 'name' => 'required|string',
@@ -43,12 +44,18 @@ class ExpenseInternalController extends Controller
                 throw new \Exception('User not found');
             }
 
+            $expenseDraft = $user->expenseDrafts()->where('message_id', $request->message_id)->first();
+            if ($expenseDraft) {
+                throw ValidationException::withMessages(['Message ID' => 'Expense draft is already exist']);
+            }
+
             $user->expenseDrafts()->create([
                 'id' => Str::uuid(),
                 'name' => $request->name,
                 'type' => $type->value,
                 'price' => $request->price,
                 'date' => $request->date,
+                'message_id' => $request->message_id
             ]);
 
             Log::info('Expense draft created successfully', ['user_id' => $user->id]);
