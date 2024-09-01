@@ -16,9 +16,13 @@ class ExpenseDraftController extends Controller
         $this->middleware('auth:user');
     }
 
-    private function findExpenseDraft($id)
+    private function findUser()
     {
-        $user = User::find(auth('user')->user()->id);
+        return User::find(auth('user')->user()->id);
+    }
+
+    private function findExpenseDraft($user, $id)
+    {
         $expense = $user->expenseDrafts()->where([
             ['id', $id]
         ])->first();
@@ -66,7 +70,7 @@ class ExpenseDraftController extends Controller
                 }
             }
 
-            $expense = $this->findExpenseDraft($request->id);
+            $expense = $this->findExpenseDraft($this->findUser(), $request->id);
             $expense->name = $request->name ? $request->name : $expense->name;
             $expense->type = $request->type ? $request->type : $expense->type;
             $expense->price = $request->price ? $request->price : $expense->price;
@@ -92,11 +96,22 @@ class ExpenseDraftController extends Controller
 
             Log::info("approving expense draft", ['request_body' => $request->all()]);
 
-            $expense = $this->findExpenseDraft($request->id);
-            $expense->status = "approved";
-            $expense->save();
+            $user = $this->findUser();
 
+            $expenseDraft = $this->findExpenseDraft($user, $request->id);
+            $expenseDraft->status = "approved";
+            $expenseDraft->save();
             Log::info("expense draft approved");
+
+            Log::info("inserting expense draft as expense");
+            $user->expenses()->create([
+                'name' => $expenseDraft->name,
+                'type' => $expenseDraft->type,
+                'price' => $expenseDraft->price,
+                'date' => $expenseDraft->date,
+                'draft_id' => $expenseDraft->id
+            ]);
+            Log::info("expense draft inserted as expense");
             return $this->successResponse(null, 'Expense draft approved');
         } catch (\Exception $exception) {
             Log::error("approving expense draft failed", ['exception' => $exception]);
@@ -113,9 +128,16 @@ class ExpenseDraftController extends Controller
 
             Log::info("denying expense draft", ['request_body' => $request->all()]);
 
-            $expense = $this->findExpenseDraft($request->id);
-            $expense->status = "denied";
-            $expense->save();
+            $expenseDraft = $this->findExpenseDraft($this->findUser(), $request->id);
+
+            if ($expenseDraft->status == 'approved') {
+                Log::info("expense draft has been approved before, deleting expense data related to it");
+                $expenseDraft->expense()->delete();
+                Log::info("expense deleted");
+            }
+
+            $expenseDraft->status = "denied";
+            $expenseDraft->save();
 
             Log::info("expense draft denied");
             return $this->successResponse(null, 'Expense draft denied');
