@@ -11,7 +11,7 @@ class Expense extends Model
      *
      * @var array
      */
-    protected $fillable = ['name', 'type', 'price', 'date'];
+    protected $fillable = ['name', 'type', 'price', 'date', 'draft_id'];
 
     /**
      * The attributes excluded from the model's JSON form.
@@ -19,7 +19,9 @@ class Expense extends Model
      * @var array
      */
     protected $hidden = [
-        'user_id', "created_at", "updated_at"
+        'user_id',
+        "created_at",
+        "updated_at"
     ];
 
     /**
