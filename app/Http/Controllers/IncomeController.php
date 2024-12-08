@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\Pagination;
 use App\Models\Income;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -30,7 +31,7 @@ class IncomeController extends Controller
                 ->orderBy('yearmonth', 'desc')
                 ->paginate($dataPerPage);
             Log::info("fetch income summary success");
-            return $this->successResponse($incomeSummary);
+            return $this->successResponse(new Pagination($incomeSummary));
         } catch (\Exception $exception) {
             Log::error("fetch income summary failed", ['exception' => $exception]);
             return $this->errorResponse($exception);
@@ -54,7 +55,7 @@ class IncomeController extends Controller
                 ->orderBy('date', 'desc')
                 ->paginate($dataPerPage);
             Log::info("fetch income success");
-            return $this->successResponse($incomes);
+            return $this->successResponse(new Pagination($incomes));
         } catch (\Exception $exception) {
             Log::error("fetch income failed", ['exception' => $exception]);
             return $this->errorResponse($exception);

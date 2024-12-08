@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\ExpenseType;
 use App\Enums\MailType;
 use App\Exceptions\ExpenseTypeException;
+use App\Http\Resources\Pagination;
 use App\Jobs\SendEmailJob;
 use App\Models\Expense;
 use App\Models\User;
@@ -35,7 +36,7 @@ class ExpenseController extends Controller
                 ->orderBy('yearmonth', 'desc')
                 ->paginate($dataPerPage);
             Log::info("fetch expense summary success");
-            return $this->successResponse($expensesSummary);
+            return $this->successResponse(new Pagination($expensesSummary));
         } catch (\Exception $exception) {
             Log::error("fetch expense summary failed", ['exception' => $exception]);
             return $this->errorResponse($exception);
@@ -59,7 +60,7 @@ class ExpenseController extends Controller
                 ->orderBy('date', 'desc')
                 ->paginate($dataPerPage);
             Log::info("fetch expense success");
-            return $this->successResponse($expenses);
+            return $this->successResponse(new Pagination($expenses));
         } catch (\Exception $exception) {
             Log::error("fetch expense failed", ['exception' => $exception]);
             return $this->errorResponse($exception);
