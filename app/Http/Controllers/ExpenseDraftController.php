@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\ExpenseType;
 use App\Exceptions\EntityNotFoundException;
 use App\Exceptions\ExpenseTypeException;
+use App\Http\Resources\Pagination;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -38,12 +39,20 @@ class ExpenseDraftController extends Controller
     {
         try {
             Log::info("fetching expense drafts");
+            $status = $request->query('status');
+            $dataPerPage = $request->query('count', '5');
             $user = User::find(auth('user')->user()->id);
             if (!$user) {
                 throw new \Exception('User not found');
             }
             Log::info("fetch expense drafts success");
-            return $this->successResponse($user->expenseDrafts);
+
+            $filterCondition = $status ? ['status' => $status] : [];
+
+            $expensesDraft = $user->expenseDrafts()->where($filterCondition)
+                ->orderBy('created_at', 'desc')
+                ->paginate($dataPerPage);
+            return $this->successResponse(new Pagination($expensesDraft));
         } catch (\Exception $exception) {
             Log::error("fetch expense drafts failed", ['exception' => $exception]);
             return $this->errorResponse($exception);
