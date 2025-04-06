@@ -6,6 +6,7 @@ use App\Models\Client;
 use Carbon\Carbon;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
 
 class VerifyHmacSignature
@@ -43,22 +44,29 @@ class VerifyHmacSignature
     private function getClientSecret($clientId)
     {
         $cacheKey = "CLIENT_SECRET_" . $clientId;
-        $clientSecret = Redis::get($cacheKey);
 
-        if ($clientSecret === null) { // Cache miss
-            $client = Client::where('client_id', $clientId)->first(['client_secret']);
+        try {
+            $clientSecret = Redis::get($cacheKey);
 
-            if ($client) {
-                $clientSecret = $client->client_secret;
-                Redis::setex($cacheKey, self::CLIENT_SECRET_CACHE_DURATION, $clientSecret);
-            } else {
-                // Cache a negative result for non-existent client IDs
-                Redis::setex($cacheKey, self::CLIENT_SECRET_CACHE_DURATION, "NOT_FOUND");
-                return null; // Return null to indicate the client does not exist
+            if ($clientSecret === null) {
+                $client = Client::where('client_id', $clientId)->first(['client_secret']);
+
+                if ($client) {
+                    $clientSecret = $client->client_secret;
+                    Redis::setex($cacheKey, self::CLIENT_SECRET_CACHE_DURATION, $clientSecret);
+                } else {
+                    Redis::setex($cacheKey, self::CLIENT_SECRET_CACHE_DURATION, "NOT_FOUND");
+                    return null;
+                }
             }
-        }
 
-        return $clientSecret !== "NOT_FOUND" ? $clientSecret : null;
+            return $clientSecret !== "NOT_FOUND" ? $clientSecret : null;
+        } catch (\Exception $e) {
+            Log::error('Redis error in getClientSecret: ' . $e->getMessage());
+
+            $client = Client::where('client_id', $clientId)->first(['client_secret']);
+            return $client ? $client->client_secret : null;
+        }
     }
 
     private function validateHmacSignature(Request $request, $clientSecret, $providedSignature)
