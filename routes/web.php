@@ -68,6 +68,15 @@ $router->group(
     }
 );
 
+$router->group(
+    ['prefix' => '/public/v2/'],
+    function ($router) {
+        $router->group(['prefix' => 'auth'], function ($router) {
+            $router->post('login', 'AuthController@loginV2');
+        });
+    }
+);
+
 $router->group(['prefix' => '/internal/v1/'], function ($router) {
     $router->get('/access-token', 'AccessTokenController@generateAccessToken');
 

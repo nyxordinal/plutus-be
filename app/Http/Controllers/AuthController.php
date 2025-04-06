@@ -28,7 +28,7 @@ class AuthController extends Controller
         $key = str_replace('\n', "\n", env('RSA_PRIVATE_KEY'));
         $this->rsa->loadKey($key);
 
-        $this->middleware('auth:user', ['except' => ['login', 'register', 'getServerTimestamp', 'sendResetPasswordEmail', 'resetPassword']]);
+        $this->middleware('auth:user', ['except' => ['login', 'loginV2', 'register', 'getServerTimestamp', 'sendResetPasswordEmail', 'resetPassword']]);
     }
 
     private function decodeRSA(string $cipher_text)
@@ -84,6 +84,49 @@ class AuthController extends Controller
             Log::error("account login failed", ['exception' => $exception]);
             return $this->errorResponse($exception);
         }
+    }
+
+    public function loginV2(Request $request)
+    {
+        try {
+            Log::info("start login account", ['req_body' => request()->all()]);
+            $this->validate($request, [
+                'email' => 'required|email',
+                'enc_password' => 'required',
+            ]);
+
+            $encData = self::decryptAES($request->enc_password);
+            $password = $encData[0];
+            $timestamp = $encData[1];
+
+            if (!self::validateTimestamp($timestamp)) {
+                throw new AuthorizationException('Your email or password is wrong');
+            }
+            $token = auth('user')->claims(['role' => 'user'])->attempt([
+                'email' => $request->email,
+                'password' => $password,
+            ]);
+            if ($token) {
+                $user = User::where('email', $request->email)->first();
+                $json_user = $user->toArray();
+                Log::info("login success");
+                return $this->successLoginResponse($json_user, $token);
+            } else {
+                Log::info("login failed because email or password is wrong");
+                throw new AuthorizationException('Your email or password is wrong');
+            }
+        } catch (\Exception $exception) {
+            Log::error("account login failed", ['exception' => $exception]);
+            return $this->errorResponse($exception);
+        }
+    }
+
+    private function decryptAES($encryptedText)
+    {
+        $data = base64_decode($encryptedText);
+        $iv = substr($data, 0, 16);
+        $encrypted = substr($data, 16);
+        return explode(self::ENC_PASSWORD_DELIMITER, openssl_decrypt($encrypted, 'AES-128-CBC', env('AES_SECRET_KEY'), OPENSSL_RAW_DATA, $iv));
     }
 
     public function register(Request $request)
