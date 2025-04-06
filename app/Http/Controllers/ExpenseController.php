@@ -83,7 +83,7 @@ class ExpenseController extends Controller
     private function processCreateExpense(Request $request, $userId)
     {
         $this->validate($request, [
-            'name' => 'required|string|max:100',
+            'name' => 'required|string',
             'type' => 'required|numeric',
             'price' => 'required|numeric|gt:0|max:10000000000',
             'date' => 'required|date',
