@@ -40,6 +40,7 @@ class ExpenseDraftController extends Controller
         try {
             Log::info("fetching expense drafts");
             $status = $request->query('status');
+            $excludeStatus = $request->query('exclude_status');
             $dataPerPage = $request->query('count', '5');
             $user = User::find(auth('user')->user()->id);
             if (!$user) {
@@ -47,11 +48,25 @@ class ExpenseDraftController extends Controller
             }
             Log::info("fetch expense drafts success");
 
-            $filterCondition = $status ? ['status' => $status] : [];
+            $filterCondition = [];
 
-            $expensesDraft = $user->expenseDrafts()->where($filterCondition)
-                ->orderBy('created_at', 'desc')
-                ->paginate($dataPerPage);
+            if ($status) {
+                $filterCondition['status'] = $status;
+            }
+
+            if ($excludeStatus) {
+                $expensesDraft = $user->expenseDrafts()
+                    ->where($filterCondition)
+                    ->where('status', '!=', $excludeStatus)
+                    ->orderBy('created_at', 'desc')
+                    ->paginate($dataPerPage);
+            } else {
+                $expensesDraft = $user->expenseDrafts()
+                    ->where($filterCondition)
+                    ->orderBy('created_at', 'desc')
+                    ->paginate($dataPerPage);
+            }
+
             return $this->successResponse(new Pagination($expensesDraft));
         } catch (\Exception $exception) {
             Log::error("fetch expense drafts failed", ['exception' => $exception]);
