@@ -43,9 +43,9 @@ class VerifyHmacSignature
 
     private function getClientSecret($clientId)
     {
-        $cacheKey = "CLIENT_SECRET_" . $clientId;
-
         try {
+            $cacheKey = "CLIENT_SECRET_" . $clientId;
+            
             $clientSecret = Redis::get($cacheKey);
 
             if ($clientSecret === null) {
