@@ -43,25 +43,27 @@ class AccessTokenController extends Controller
      */
     private function isClientNotExist($clientId)
     {
+        $cacheKey = "CLIENT_" . $clientId;
+
         try {
-            $cacheKey = "CLIENT_" . $clientId;
+            $cached = Redis::get($cacheKey);
 
-            $cachedClient = Redis::get($cacheKey);
-
-            if ($cachedClient !== null) {
-                return $cachedClient === "false";
+            if ($cached !== null) {
+                return $cached === "false";
             }
-
-            $clientExists = Client::find($clientId) !== null;
-            Redis::setex($cacheKey, 86400, $clientExists ? "true" : "false");
-
-            return !$clientExists;
         } catch (\Exception $e) {
-            Log::error('Redis error in isClientNotExist: ' . $e->getMessage());
-
-            $clientExists = Client::find($clientId)->exists();
-            return !$clientExists;
+            Log::error("Redis get failed in isClientNotExist: " . $e->getMessage());
         }
+
+        $clientExists = Client::find($clientId) !== null;
+
+        try {
+            Redis::setex($cacheKey, 86400, $clientExists ? "true" : "false");
+        } catch (\Exception $e) {
+            Log::warning("Redis setex failed in isClientNotExist: " . $e->getMessage());
+        }
+
+        return !$clientExists;
     }
 
     /**

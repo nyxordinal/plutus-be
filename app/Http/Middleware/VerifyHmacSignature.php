@@ -43,30 +43,29 @@ class VerifyHmacSignature
 
     private function getClientSecret($clientId)
     {
+        $cacheKey = "CLIENT_SECRET_" . $clientId;
+        $clientSecret = null;
+
         try {
-            $cacheKey = "CLIENT_SECRET_" . $clientId;
-            
-            $clientSecret = Redis::get($cacheKey);
+            $cached = Redis::get($cacheKey);
 
-            if ($clientSecret === null) {
-                $client = Client::where('client_id', $clientId)->first(['client_secret']);
-
-                if ($client) {
-                    $clientSecret = $client->client_secret;
-                    Redis::setex($cacheKey, self::CLIENT_SECRET_CACHE_DURATION, $clientSecret);
-                } else {
-                    Redis::setex($cacheKey, self::CLIENT_SECRET_CACHE_DURATION, "NOT_FOUND");
-                    return null;
-                }
+            if ($cached !== null) {
+                return $cached !== "NOT_FOUND" ? $cached : null;
             }
-
-            return $clientSecret !== "NOT_FOUND" ? $clientSecret : null;
         } catch (\Exception $e) {
-            Log::error('Redis error in getClientSecret: ' . $e->getMessage());
-
-            $client = Client::where('client_id', $clientId)->first(['client_secret']);
-            return $client ? $client->client_secret : null;
+            Log::error('Redis get failed in getClientSecret: ' . $e->getMessage());
         }
+
+        $client = Client::where('client_id', $clientId)->first(['client_secret']);
+        $clientSecret = $client ? $client->client_secret : "NOT_FOUND";
+
+        try {
+            Redis::setex($cacheKey, self::CLIENT_SECRET_CACHE_DURATION, $clientSecret);
+        } catch (\Exception $e) {
+            Log::warning('Redis setex failed in getClientSecret: ' . $e->getMessage());
+        }
+
+        return $clientSecret !== "NOT_FOUND" ? $clientSecret : null;
     }
 
     private function validateHmacSignature(Request $request, $clientSecret, $providedSignature)
