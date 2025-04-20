@@ -45,9 +45,5 @@ RUN sed -i \
     -e "\$a newrelic.daemon.address=${NEW_RELIC_DAEMON_ADDRESS}" \
     /usr/local/etc/php/conf.d/newrelic.ini
 
-# Print New Relic agent version before starting the app
-RUN php -r "echo 'New Relic Agent Version: ' . php_ini_loaded_file() . PHP_EOL;" \
-    && php -i | grep "newrelic.version" 
-
 # CMD to run Lumen app and queue worker
 CMD ["sh", "-c", "php artisan key:generate && php -S 0.0.0.0:8001 -t public & php artisan queue:listen --tries=3"]
