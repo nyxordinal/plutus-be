@@ -22,18 +22,27 @@ RUN cp .env.example .env \
 # Expose port for PHP built-in server
 EXPOSE 8001
 
-# Install New Relic PHP Agent
+# Define ARGs
 ARG NEW_RELIC_AGENT_VERSION
-ENV NEW_RELIC_AGENT_VERSION=${NEW_RELIC_AGENT_VERSION:-10.12.0.9}
 ARG NEW_RELIC_LICENSE_KEY
 ARG NEW_RELIC_APPNAME
 ARG NEW_RELIC_DAEMON_ADDRESS
+
+# Map ARGs to ENV variables
+ENV NEW_RELIC_AGENT_VERSION=${NEW_RELIC_AGENT_VERSION}
+ENV NEW_RELIC_LICENSE_KEY=${NEW_RELIC_LICENSE_KEY}
+ENV NEW_RELIC_APPNAME=${NEW_RELIC_APPNAME}
+ENV NEW_RELIC_DAEMON_ADDRESS=${NEW_RELIC_DAEMON_ADDRESS}
 
 RUN curl -L https://download.newrelic.com/php_agent/archive/${NEW_RELIC_AGENT_VERSION}/newrelic-php5-${NEW_RELIC_AGENT_VERSION}-linux.tar.gz | tar -C /tmp -zx \
     && export NR_INSTALL_USE_CP_NOT_LN=1 \
     && export NR_INSTALL_SILENT=1 \
     && /tmp/newrelic-php5-${NEW_RELIC_AGENT_VERSION}-linux/newrelic-install install \
     && rm -rf /tmp/newrelic-php5-* /tmp/nrinstall*
+
+RUN echo "New Relic App Name: ${NEW_RELIC_APPNAME}" \
+    && echo "New Relic Daemon Address: ${NEW_RELIC_DAEMON_ADDRESS}" \
+    && echo "New Relic Agent Version: ${NEW_RELIC_AGENT_VERSION}"
 
 # Ensure the PHP extension is enabled
 RUN echo "extension = newrelic.so" > /usr/local/etc/php/conf.d/newrelic.ini

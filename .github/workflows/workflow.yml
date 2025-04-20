@@ -49,6 +49,7 @@ jobs:
             NEW_RELIC_AGENT_VERSION=${{ secrets.NEW_RELIC_AGENT_VERSION }}
             NEW_RELIC_LICENSE_KEY=${{ secrets.NEW_RELIC_LICENSE_KEY }}
             NEW_RELIC_APPNAME=${{ secrets.NEW_RELIC_APPNAME }}
+            NEW_RELIC_DAEMON_ADDRESS=${{ secrets.NEW_RELIC_DAEMON_ADDRESS }}
   deploy:
     name: Deploy
     needs: build_and_push
