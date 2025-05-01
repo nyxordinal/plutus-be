@@ -15,17 +15,18 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v3
 
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v1
+      - name: Log in to GitHub Container Registry (GHCR)
+        uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GHCR_PAT }}
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: nyxordinal/plutus-be
+          images: ghcr.io/${{ github.repository_owner }}/plutus-be
 
       - name: Get commit SHA
         id: vars
@@ -35,7 +36,7 @@ jobs:
         id: set_commit_sha
         run: echo "::set-output name=commit_sha::${{ env.COMMIT_SHA }}"
 
-      - name: Build and push Docker image
+      - name: Build and push Docker image to GHCR
         uses: docker/build-push-action@v3
         with:
           context: .
@@ -43,7 +44,7 @@ jobs:
           push: true
           tags: |
             ${{ steps.meta.outputs.tags }}
-            nyxordinal/plutus-be:${{ env.COMMIT_SHA }}
+            ghcr.io/${{ github.repository_owner }}/plutus-be:${{ env.COMMIT_SHA }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             NEW_RELIC_AGENT_VERSION=${{ secrets.NEW_RELIC_AGENT_VERSION }}
