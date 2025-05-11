@@ -78,9 +78,7 @@ $router->group(
 );
 
 $router->group(['prefix' => '/internal/v1/'], function ($router) {
-    $router->get('/access-token', 'AccessTokenController@generateAccessToken');
-
-    $router->group(['prefix' => '/expense', 'middleware' => 'verify.hmac.signature'], function ($router) {
+    $router->group(['prefix' => '/expense', 'middleware' => 'verify.internal.client'], function ($router) {
         $router->post('/', 'ExpenseInternalController@createExpenseInternal');
     });
 });

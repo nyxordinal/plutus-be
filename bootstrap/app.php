@@ -84,7 +84,7 @@ $app->middleware([
 
 $app->routeMiddleware([
     'auth' => App\Http\Middleware\Authenticate::class,
-    'verify.hmac.signature' => App\Http\Middleware\VerifyHmacSignature::class,
+    'verify.internal.client' => App\Http\Middleware\VerifyInternalClient::class,
 ]);
 
 /*
