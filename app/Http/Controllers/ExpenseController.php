@@ -50,6 +50,7 @@ class ExpenseController extends Controller
             $startDate = $request->query('start', '0001-01-01 00:00:00');
             $endDate = $request->query('end', '9999-12-31 23:59:59');
             $name = $request->query('name', '');
+            $type = $request->query('type', '');
             $dataPerPage = $request->query('count', '5');
             $user = User::find(auth('user')->user()->id);
             $expenses = $user->expenses()->where([
@@ -57,6 +58,9 @@ class ExpenseController extends Controller
                 ['date', '>=', $startDate],
                 ['date', '<=', $endDate],
             ])
+                ->when(!empty($type), function ($query) use ($type) {
+                    return $query->where('type', $type);
+                })
                 ->orderBy('date', 'desc')
                 ->paginate($dataPerPage);
             Log::info("fetch expense success");
