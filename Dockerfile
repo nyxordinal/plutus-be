@@ -1,5 +1,5 @@
 # Use the official PHP image with FPM and Alpine
-FROM php:7.4-fpm-alpine
+FROM php:8.2.35-fpm-alpine
 
 # Install required packages and PHP extensions
 RUN apk add --no-cache \

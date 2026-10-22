@@ -1,109 +1,124 @@
 # Plutus BE
 
-## Description
+Backend API for Plutus, Nyxordinal's personal finance application.
 
-Backend service of Plutus, a monetary management system from Nyxordinal
+## Stack
 
-## Development Tools
+- PHP 8.2.35 or later (Composer requirement: `^8.2.35`)
+- Laravel Lumen 8.3.4
+- MySQL, with Redis used by the internal-client middleware and cache configuration
+- JWT authentication (`php-open-source-saver/jwt-auth`)
+- PHPUnit 9
 
--   [Lumen v8.0.1](https://lumen.laravel.com/)
--   [JSON Web Token Authentication for Laravel & Lumen](https://github.com/tymondesigns/jwt-auth)
--   [Faker](https://github.com/fzaninotto/Faker)
--   [Lumen Generator](https://github.com/flipboxstudio/lumen-generator)
--   [Laravel CORS](https://github.com/fruitcake/laravel-cors)
+The Docker image is based on `php:8.2.35-fpm-alpine`. The container starts the HTTP server on port `8001` and a queue listener.
 
-## Set Up
+## Requirements
 
-1. Clone this repo and change directory to project folder  
-   `git clone https://github.com/nyxordinal/plutus-be.git && cd /plutus-be`
-2. Install dependencies  
-   `composer install`
-3. Copy .env.example to .env  
-   `cp .env.example .env`
-4. Generate aplication key  
-   `php artisan key:generate`
-5. Generate JWT secret key  
-   `php artisan jwt:secret`
-6. Set your database credential in .env on key `DB\_\*`
-7. Generate a pair of public and private RSA key with `pkcs1` padding
-8. Place your private RSA key in .env on key `RSA_PRIVATE_KEY`. If you want to make it as a one-line, make sure to use single quote
-9. Save your previously generated public RSA key and use it in [plutus-fe](https://github.com/nyxordinal/plutus-fe)
-10. If you are in production, do not forget to set APP_ENV in .env to "production" and set APP_DEBUG to "false"
+For local development, install:
 
-## Run Dev Server
+- PHP 8.2.35 or later with PDO MySQL and OpenSSL extensions
+- Composer
+- MySQL
+- Redis (or configure another supported cache/queue backend)
 
-1. Open terminal in your project folder
-2. Use below command in the terminal
-   `php artisan serve`
-3. Access development server in http://localhost:8000
+## Local setup
 
-## Deployment Database Setup
+1. Clone the repository and enter the project directory:
 
-1. Create `plutus_be` database in your RDMBS
-2. Run migration  
-   `php artisan migrate`
+    ```sh
+    git clone https://github.com/nyxordinal/plutus-be.git
+    cd plutus-be
+    ```
+
+2. Create the environment file and install dependencies:
+
+    ```sh
+    cp .env.example .env
+    composer install
+    ```
+
+3. Configure `.env` for your local database, Redis, mail transport, and application URL. Set `APP_KEY` and `JWT_SECRET`:
+
+    ```sh
+    php artisan key:generate
+    php artisan jwt:secret
+    ```
+
+    Login also needs the matching encryption key material: set `RSA_PRIVATE_KEY` for v1 login and `AES_SECRET_KEY` for v2 login. The corresponding public RSA key belongs in the Plutus frontend configuration.
+
+4. Create the database named in `DB_DATABASE`, then run migrations:
+
+    ```sh
+    php artisan migrate
+    ```
+
+    For local development only, `php artisan db:seed` creates a sample user and internal client. Do not use these seed records in production.
+
+5. Start the development server:
+
+    ```sh
+    php artisan serve --host=127.0.0.1 --port=8000
+    ```
+
+The API is then available at `http://127.0.0.1:8000`.
+
+## API routes
+
+Public API v1 routes use the `/public/v1` prefix. Most endpoints require a JWT access token in `Authorization: Bearer <token>`.
+
+| Area                            | Routes                                                                                                                                 |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Status and login                | `GET /public/v1/`, `GET /public/v1/login-state`, `POST /public/v1/auth/login`                                                          |
+| Registration and password reset | `POST /public/v1/auth/register`, `/forgot`, `/reset`                                                                                   |
+| Current user and token          | `GET /public/v1/auth/me`, `GET /public/v1/auth/refresh`                                                                                |
+| Home                            | `GET /public/v1/home/stat`                                                                                                             |
+| Expenses                        | `GET` and `POST /public/v1/expense`, `PUT /public/v1/expense`, `GET /public/v1/expense/summary`, `POST /public/v1/expense/delete/bulk` |
+| Expense drafts                  | `GET` and `PUT /public/v1/expense/draft`, `POST /public/v1/expense/draft/approve`, `POST /public/v1/expense/draft/deny`                |
+| Income                          | `GET` and `POST /public/v1/income`, `PUT /public/v1/income`, `GET /public/v1/income/summary`, `POST /public/v1/income/delete/bulk`     |
+| Settings                        | `GET` and `PUT /public/v1/setting`                                                                                                     |
+
+Public API v2 currently provides `POST /public/v2/auth/login`.
+
+The internal expense endpoint is `POST /internal/v1/expense`. It requires both `X-Client-Id` and `X-Client-Token` headers; client credentials are stored in the `clients` table.
+
+## Tests
+
+Run the PHPUnit suite with:
+
+```sh
+vendor/bin/phpunit
+```
 
 ## Docker
 
-A. Publish Development Changes
+Build the application image from the repository root:
 
-1. Do your changes
-2. Build plutus-be docker image
-    ```sh
-    docker build \
-    --build-arg NEW_RELIC_AGENT_VERSION=<new_relic_version> \
-    --build-arg NEW_RELIC_LICENSE_KEY=<license_key> \
-    --build-arg NEW_RELIC_APPNAME=<app_name> \
-    -t nyxordinal/plutus-be:{tag} .
-    ```
-3. Push docker image to nyxordinal registry  
-   `docker push nyxordinal/plutus-be:{tag}`
-
-B. Deploy Docker Image (Production Server)
-
-1. Pull plutus-be docker image  
-   `docker pull nyxordinal/plutus-be:{tag}`
-2. Create and start plutus-be container
-
-```
-docker run -d -p {host-port}:8001 --name plutus-be \
-    --env APP_NAME=plutus-be \
-    --env APP_ENV=production \
-    --env APP_DEBUG=false \
-    --env APP_URL=http://localhost:8001 \
-    --env APP_TIMEZONE=UTC \
-    --env DB_CONNECTION=mysql \
-    --env DB_HOST={your-docker-host-ip} \
-    --env DB_PORT=3306 \
-    --env DB_DATABASE=plutus_be \
-    --env DB_USERNAME={your-db-username} \
-    --env DB_PASSWORD={your-db-password} \
-    --env REDIS_HOST={your-redis-host} \
-    --env REDIS_PASSWORD={your-redis-password} \
-    --env JWT_SECRET={your-jwt-secret} \
-    --env JWT_TTL={your-jwt-ttl} \
-    --env RSA_PRIVATE_KEY={your-private-rsa-key} \
-    --env MAIL_MAILER=smtp \
-    --env MAIL_HOST=smtp.mailtrap.io \
-    --env MAIL_PORT=2525 \
-    --env MAIL_USERNAME={your-mail-username} \
-    --env MAIL_PASSWORD={your-mail-password} \
-    --env MAIL_ENCRYPTION=tls \
-    --env MAIL_FROM_ADDRESS=hello@example.com \
-    --env MAIL_FROM_NAME="Plutus Nyxordinal" \
-    nyxordinal/plutus-be:{tag}
+```sh
+docker build -t nyxordinal/plutus-be:<tag> .
 ```
 
-4. Access plutus-be in http://localhost:{host-port}/api
+Pass the application configuration at runtime. For example:
 
-> **_NOTE:_** How to check your docker host IP, find out [in this link](https://nickjanetakis.com/blog/docker-tip-35-connect-to-a-database-running-on-your-docker-host)  
-> Or you can add `--net="host"` in `docker run` command and then for DB_HOST you can use `"localhost"`.  
-> If you use `--net="host"` in `docker run` command, `-p {host-port}:8001` must be removed from `docker run` command
+```sh
+docker run -d \
+  --name plutus-be \
+  --env-file <runtime-env-file> \
+  -p 8001:8001 \
+  nyxordinal/plutus-be:<tag>
+```
 
-## Notes
+Make sure `DB_HOST` and `REDIS_HOST` in the runtime environment resolve from inside the container. For production, set `APP_ENV=production`, `APP_DEBUG=false`, and provide production-only secrets and credentials. Run database migrations as a deployment step:
 
-After doing your changes, you might want to run `tlint` command to run the linter
+```sh
+docker exec plutus-be php artisan migrate --force
+```
 
-## Developer Team
+To publish an image, tag it for the registry and push it:
 
-Developed with passion by [Nyxordinal](https://github.com/nyxordinal)
+```sh
+docker push nyxordinal/plutus-be:<tag>
+```
+
+## License
+
+See [LICENSE](LICENSE).
